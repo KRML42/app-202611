@@ -2,6 +2,19 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor).
 
+## 2026.11.17.3 · Finanzas 2.0
+
+- **Dividir un movimiento** en varias líneas con su categoría (como abrir la línea en Excel). El movimiento del banco no se modifica; presupuestos y resúmenes usan las líneas. La última línea puede quedar vacía y toma lo que falte.
+- **Gastos compartidos:** reglas por categoría o subcategoría con su parte en porcentaje o importe fijo, con fecha de inicio. Excepciones por movimiento o por línea ("solo mío", 50 %, otro %, importe). En presupuestos y resúmenes cuenta solo tu parte.
+- **Aportaciones de pareja:** nueva categoría "Pareja › Aportación", que no cuenta como ingreso. Resumen informativo de su parte frente a lo aportado, con "Poner a cero desde este mes".
+- **Traspasos entre tus cuentas:** se emparejan solos (mismo importe, fechas a 4 días o menos). No cuentan como ingreso ni gasto; el ahorro del mes es lo que pasa de la corriente al ahorro menos lo que vuelve. Se pueden deshacer desde el movimiento.
+- Quitada la sección de contactos por teléfono (el banco no exporta teléfonos).
+
+
+- Corregido: al volver a importar el archivo más antiguo aparecía un aviso falso de "el saldo inicial no enlaza". Ahora se compara solo con movimientos que no vienen en el propio archivo.
+- Detección de teléfonos más tolerante (+34, 0034, 34, espacios, puntos) sin confundir tarjetas ni IBAN.
+- El resultado de cada importación indica cuántos teléfonos encontró en Observaciones.
+
 ## 2026.11.17
 
 **Mejoras de uso**

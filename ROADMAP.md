@@ -17,18 +17,19 @@ App personal de organización diaria y finanzas. Un solo usuario, sin servidor, 
 
 ## Estado actual
 
-Hoy (día/semana/mes), tareas, quehaceres recurrentes, listas de compra, hábitos (hacer, reducir, dejar), finanzas (importación del banco, reglas que aprenden, contactos de Bizum, notas, resumen, presupuestos), copia de seguridad en archivo o texto.
+Hoy (día/semana/mes), tareas, quehaceres recurrentes, listas de compra, hábitos (hacer, reducir, dejar), finanzas (importación del banco, reglas que aprenden, notas, dividir movimientos, gastos compartidos, traspasos entre cuentas, resumen, presupuestos), copia de seguridad en archivo o texto.
 
 ## Fases
 
 | # | Fase | Estado |
 |---|------|--------|
 | 1 | Base técnica ligera: fuentes locales, apertura sin conexión, versión, aviso de actualización, copia en archivo, indicador de espacio | Hecho |
-| 2 | Mejoras de uso: notas en movimientos, editar elementos de listas, ordenar "Por clasificar" y ver el día, teléfonos de Bizum | Hecho |
-| 3 | Finanzas 2.0: traspasos emparejados entre cuentas, gastos compartidos con cuenta por cobrar, gastos recurrentes y suscripciones | Siguiente |
-| 4 | Metas: sobres dentro de la cuenta de ahorro, tareas por meta, plantillas (viaje, vivienda), metas compartidas | Pendiente |
+| 2 | Mejoras de uso: notas en movimientos, editar elementos de listas, ordenar "Por clasificar" y ver el día | Hecho |
+| 3 | Finanzas 2.0: dividir movimientos, gastos compartidos (informativo, sin deudas), traspasos emparejados entre cuentas | Hecho |
+| 3b | Gastos recurrentes y suscripciones (junto con la previsión) | Pendiente |
+| 4 | Metas: sobres dentro de la cuenta de ahorro, tareas por meta, plantillas (viaje, vivienda), metas compartidas | Siguiente |
 | 5 | Meal prep: ingredientes con precios por tienda, recetas con coste por ración, plan semanal a lista de compra, ahorro frente a comer fuera | Pendiente |
-| 6 | Previsión de flujo de caja y alertas en Hoy (presupuesto excedido, mínimo de seguridad, cobros pendientes) | Pendiente |
+| 6 | Previsión de flujo de caja y alertas en Hoy (presupuesto excedido, mínimo de seguridad) | Pendiente |
 | 7 | Según necesidad: IndexedDB cuando el espacio lo pida, copias cifradas con contraseña | Pendiente |
 
 ## Fuera de alcance

@@ -7,6 +7,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0b7a75">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi Día">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -121,7 +123,7 @@ ul.rows{list-style:none;margin:0;padding:0;background:var(--surface);border:1px 
 .addopts{display:grid;grid-template-columns:1fr auto;gap:8px}
 label{display:grid;gap:4px;font-size:.85rem;font-weight:600;color:var(--muted)}
 input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:400;font-size:1rem;width:100%;min-width:0}
-textarea{min-height:120px;font:400 .8rem/1.4 ui-monospace,Menlo,monospace}
+textarea{min-height:120px;font:400 16px/1.4 ui-monospace,Menlo,monospace}
 nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 nav button{display:grid;justify-items:center;gap:2px;padding:8px 0 7px;color:var(--muted);font-size:.7rem;font-weight:600;text-align:center}
 nav button[aria-current="page"]{color:var(--accent)}
@@ -1099,7 +1101,7 @@ function viewCompras(){
 }
 function itemRow(i){
   return '<li class="row"><button class="check'+(i.done?' on':'')+'" data-act="item-toggle" data-id="'+i.id+'" aria-label="'+(i.done?'Devolver a pendientes':'Marcar como comprado')+'"></button>'+
-    '<span class="rowmain"><span class="t'+(i.done?' done':'')+'">'+esc(i.text)+'</span></span>'+
+    '<button class="rowmain" data-act="item-edit" data-id="'+i.id+'" aria-label="Editar '+esc(i.text)+'"><span class="t'+(i.done?' done':'')+'">'+esc(i.text)+'</span></button>'+
     '<button class="x" data-act="item-del" data-id="'+i.id+'" aria-label="Quitar">×</button></li>';
 }
 
@@ -1236,6 +1238,19 @@ function openListSheet(l){
 
 /* ---------- Acciones ---------- */
 function find(arr,id){return arr.filter(function(x){return x.id===id;})[0];}
+function openItemSheet(id){
+  var L=null,it=null;S.lists.forEach(function(l){var x=find(l.items,id);if(x){L=l;it=x;}});
+  if(!it)return;
+  openSheet({title:'Editar elemento',values:{text:it.text,list:L.id},
+    fieldsFn:function(v){var f=[{id:'text',label:'Texto',value:v.text,required:true}];
+      if(S.lists.length>1)f.push({id:'list',label:'Lista',type:'select',value:v.list,options:S.lists.map(function(l){return {v:l.id,t:l.name};})});
+      return f;},
+    onSave:function(v){
+      var t=String(v.text).replace(/\|/g,'/').trim();if(t)it.text=t;
+      if(v.list&&v.list!==L.id){var NL=find(S.lists,v.list);if(NL){L.items=L.items.filter(function(x){return x!==it;});NL.items.push(it);}}
+    },
+    onDelete:function(){L.items=L.items.filter(function(x){return x!==it;});}});
+}
 function addItem(L,text){
   text=text.replace(/\|/g,'/').trim();if(!text)return;
   L.items.push({id:uid(),text:text,done:false});
@@ -1290,6 +1305,7 @@ function act(a,ds){
     case 'list-select':ui.listId=ds.id;break;
     case 'list-new':openListSheet(null);return;
     case 'list-edit':openListSheet(find(S.lists,ds.id));return;
+    case 'item-edit':openItemSheet(ds.id);return;
     case 'item-toggle':case 'item-del':
       S.lists.forEach(function(l){var i=find(l.items,ds.id);if(!i)return;if(a==='item-toggle')i.done=!i.done;else l.items=l.items.filter(function(x){return x!==i;});});save();break;
     case 'freq-add':var L=curList();if(L){addItem(L,ds.text);save();ui.focus='#new-item';}break;

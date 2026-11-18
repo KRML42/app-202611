@@ -1,6 +1,28 @@
 # Cambios
 
-Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor).
+Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
+
+## 2026.11.18.3
+
+- Corregido: duplicados al importar descargas que se solapan cuando un movimiento pendiente cambia de posición (su saldo "Disponible" cambia). Ahora cada fila se empareja por clave exacta, luego por saldo y, si no, por día valor + importe + texto (como multiconjunto, para no fusionar compras repetidas reales). Los movimientos emparejados se actualizan con la fecha contable y el saldo de la descarga más reciente (`src`), sin que reimportar un archivo antiguo los revierta.
+- El saldo de la cuenta usa el movimiento más reciente por fecha contable, archivo y posición.
+- Cuentas: "Revisar duplicados" (mismo día valor, importe y texto), con borrar o "Son distintos".
+
+## 2026.11.18.2 · Metas
+
+- **Sobres:** el saldo de la cuenta de ahorro se reparte entre metas y "Sin asignar" (saldo = sobres + sin asignar). Sin cuenta de ahorro importada, el ahorro se calcula con los traspasos.
+- **Plantillas:** fondo de emergencia (propone 3 meses de gastos fijos), vivienda (entrada, gastos de compra, mudanza), viaje (partidas + colchón 10 %) y libre.
+- **Reparto mensual automático** del ahorro neto de cada mes completo según porcentajes, con aviso, deshacer y propuesta de ajuste según el tiempo que falta.
+- **Mover entre sobres**, repartir lo sin asignar, y elegir de qué sobre sale el dinero cuando se retira más de lo sin asignar.
+- **Viajes:** fechas de ida y vuelta, revisión con casillas de los gastos de esas fechas (cargos fijos desmarcados), asignación manual desde el movimiento con partida, plan frente a lo gastado y gasto diario disponible durante el viaje.
+- **Tareas por meta** (aparecen también en Tareas y, con fecha, en Hoy). Archivar una meta devuelve su saldo a sin asignar.
+
+## 2026.11.18
+
+- Compartir una lista de compras (menú de compartir del móvil) o copiarla completa al portapapeles.
+- Historial de 12 meses por categoría o subcategoría: media y mínimo de meses completos, máximo, presupuesto y acceso a los movimientos de cada mes (filtro por categoría en Movimientos).
+- "Por clasificar": casillas en cada grupo y opción "Solo los marcados, sin regla".
+- Cuadro de novedades una vez por versión (las notas están en `CHANGES` dentro de `index.html`) y sección Novedades en Más.
 
 ## 2026.11.17.3 · Finanzas 2.0
 

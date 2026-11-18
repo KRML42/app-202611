@@ -17,7 +17,7 @@ App personal de organización diaria y finanzas. Un solo usuario, sin servidor, 
 
 ## Estado actual
 
-Hoy (día/semana/mes), tareas, metas de ahorro con sobres, quehaceres recurrentes, listas de compra, hábitos (hacer, reducir, dejar), finanzas (importación del banco, reglas que aprenden, notas, dividir movimientos, gastos compartidos, traspasos entre cuentas, resumen, presupuestos), copia de seguridad en archivo o texto.
+Hoy (día/semana/mes), tareas, metas de ahorro con sobres, meal prep, quehaceres recurrentes, listas de compra, hábitos (hacer, reducir, dejar), finanzas (importación del banco, reglas que aprenden, notas, dividir movimientos, gastos compartidos, traspasos entre cuentas, resumen, presupuestos), copia de seguridad en archivo o texto.
 
 ## Fases
 
@@ -28,8 +28,8 @@ Hoy (día/semana/mes), tareas, metas de ahorro con sobres, quehaceres recurrente
 | 3 | Finanzas 2.0: dividir movimientos, gastos compartidos (informativo, sin deudas), traspasos emparejados entre cuentas | Hecho |
 | 3b | Gastos recurrentes y suscripciones (junto con la previsión) | Pendiente |
 | 4 | Metas: sobres dentro de la cuenta de ahorro, reparto mensual, tareas por meta, plantillas, viajes con plan frente a lo gastado | Hecho |
-| 5 | Meal prep: ingredientes con precios por tienda, recetas con coste por ración, plan semanal a lista de compra, ahorro frente a comer fuera | Siguiente |
-| 6 | Previsión de flujo de caja y alertas en Hoy (presupuesto excedido, mínimo de seguridad) | Pendiente |
+| 5 | Meal prep: ingredientes con precios por tienda, recetas con coste por ración, plan semanal a lista de compra, ahorro frente a comer fuera | Hecho |
+| 6 | Previsión de flujo de caja y alertas en Hoy (presupuesto excedido, mínimo de seguridad) | Siguiente |
 | 7 | Según necesidad: IndexedDB cuando el espacio lo pida, copias cifradas con contraseña | Pendiente |
 
 ## Fuera de alcance

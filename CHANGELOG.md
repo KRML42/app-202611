@@ -2,6 +2,17 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.18.4 · Meal prep
+
+- Compras tiene dos vistas: Listas y Meal prep.
+- Ingredientes (g, ml o unidades) con precios por tienda e historial; precio usado: el más barato, el último o el de una tienda. Precios de más de 90 días marcados para revisar.
+- Recetas (meal prep o para casa) con coste total y por ración, aviso si supera el objetivo y qué ingrediente pesa más. Los ingredientes nuevos se crean al escribirlos en la receta.
+- "Cociné esta receta" crea una tanda; en Hoy (y en días pasados) se marca "Comí meal prep". Ahorro = referencia de comer fuera − coste de la ración.
+- Ingredientes de una receta a la lista de compras, escalados a las raciones, con la tienda más barata.
+- Ajustes: referencia (7 €), objetivo (5 €), modo de precio y tiendas.
+- Historial de categorías: total de los 12 meses en lugar del mes actual.
+- Corregido: un estado nuevo (primera instalación) ahora pasa siempre por la normalización.
+
 ## 2026.11.18.3
 
 - Corregido: duplicados al importar descargas que se solapan cuando un movimiento pendiente cambia de posición (su saldo "Disponible" cambia). Ahora cada fila se empareja por clave exacta, luego por saldo y, si no, por día valor + importe + texto (como multiconjunto, para no fusionar compras repetidas reales). Los movimientos emparejados se actualizan con la fecha contable y el saldo de la descarga más reciente (`src`), sin que reimportar un archivo antiguo los revierta.

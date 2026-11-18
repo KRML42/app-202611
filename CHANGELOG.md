@@ -2,6 +2,16 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.18.6 · Lote de mejoras
+
+- **Hábitos:** tocar un círculo de la semana marca o desmarca ese día (hábitos de "hacer"); en reducir/dejar abre un cuadro para corregir ese día, con "Ver el día completo".
+- **Hábitos de reducir:** límite por día o por semana (lunes a domingo): total semanal, colores, círculos en rojo desde el día en que se pasa, semana pasada y semanas seguidas dentro del límite.
+- **Finanzas:** sección "Ingresos y aportaciones" en el Resumen con historial; "Ver todos los movimientos" de una categoría (todos los meses); selección múltiple en Movimientos (pulsación larga o "Seleccionar", "Todos", "Ninguno") y "Cambiar categoría" sin crear regla.
+- **Borradores:** recetas, ingredientes, metas, planes y divisiones se guardan mientras se escriben (`mi-dia-draft`) y se ofrecen al volver si la app se recargó. Gesto de deslizar para recargar desactivado (`overscroll-behavior`) y aviso del navegador al recargar con un formulario a medias.
+- **Datos de ejemplo:** el aviso lleva a una lista para quitar solo los ejemplos que queden (o conservarlos y ocultar el aviso). "Empezar de cero" avisa de que lo borra todo.
+- **Corregido:** el cuadro de novedades no salía a quien no había guardado nada desde que instaló la app.
+- **Botón atrás:** también sale del modo selección.
+
 ## 2026.11.18.5
 
 - Botón atrás del móvil: cada cambio de pantalla (pestaña, sección de Finanzas, día, meta, receta, historial…) se guarda en el historial del navegador, así que atrás vuelve a la pantalla anterior. Con una hoja o el cuadro de novedades abiertos, atrás los cierra.

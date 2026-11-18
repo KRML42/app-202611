@@ -2,6 +2,14 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.18.7 · Lote de mejoras
+
+- **Gasto rápido y conciliación:** apuntes manuales (`fin.pend`) que cuentan en presupuestos y resúmenes. Al importar, cada apunte se une con un movimiento de la misma cuenta y signo entre 1 día antes y 5 días después: si hay un único candidato con el mismo importe, automáticamente; si el importe difiere (hasta 15 %, retenciones) o hay varios, en "Movimientos › Apuntados" para confirmar. El movimiento hereda categoría, nota y reparto (`rec`). Aviso "No apareció en el banco" cuando ya hay extracto 6 días después.
+- **Resumen semanal:** el día elegido en Más (lunes por defecto) y siempre en Hoy › Semana. Últimos 7 días: hábitos frente a la semana anterior, tareas y quehaceres, gasto frente a la semana anterior y al ritmo del presupuesto, categorías principales, meal prep, metas y pendientes.
+- **Prioridades de la semana:** tareas con `star`, visibles en Hoy; se eligen en el resumen o en cualquier momento.
+- **Quehaceres:** aviso con la próxima vez, "Hechos hoy" con deshacer, actividad de 14 días e historial editable en cada quehacer.
+- **Meal prep:** lista nueva desde la receta, una lista por tienda, tienda habitual por ingrediente y modo de precio "tienda habitual". Los ingredientes de recetas no cuentan como frecuentes.
+
 ## 2026.11.18.6 · Lote de mejoras
 
 - **Hábitos:** tocar un círculo de la semana marca o desmarca ese día (hábitos de "hacer"); en reducir/dejar abre un cuadro para corregir ese día, con "Ver el día completo".

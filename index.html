@@ -232,8 +232,9 @@ function num(x){return String(Math.round(x*10)/10).replace('.',',');}
 
 /* ---------- Datos ---------- */
 var KEY='mi-dia-v1';
-var APP_VERSION='2026.11.18.4';
+var APP_VERSION='2026.11.18.5';
 var CHANGES=[
+  {v:'2026.11.18.5',items:['El botón atrás del móvil te lleva a la pantalla anterior de la app (por ejemplo, de un día en Movimientos a «Por clasificar»), y cierra los cuadros abiertos.','Para salir de la app hay que pulsar atrás dos veces seguidas: la primera muestra un aviso.']},
   {v:'2026.11.18.4',items:['Meal prep (en Compras): ingredientes con precios por tienda, recetas con coste por ración y aviso si pasas de tu objetivo.','«Cociné esta receta» crea una tanda; cada día marca en Hoy si comiste meal prep y la app calcula cuánto ahorras frente a comer fuera.','Los ingredientes de una receta pasan a tu lista de compras con cantidades y la tienda más barata.','Historial de categorías: ahora muestra el total de los 12 meses.']},
   {v:'2026.11.18.3',items:['Corregido: si un movimiento pendiente cambiaba de posición entre dos descargas, al importar de nuevo podía duplicarse. Ahora se reconoce por día, importe y texto, y se actualiza su saldo.','Nuevo en Cuentas: «Revisar duplicados» para encontrar y borrar duplicados que ya tengas.']},
   {v:'2026.11.18.2',items:['Metas de ahorro con sobres: tu cuenta de ahorro se reparte entre metas (fondo de emergencia, vivienda, viajes u otras) sin crear movimientos.','Cada mes la app reparte tu ahorro neto según tus porcentajes y te propone ajustes según el tiempo que falta.','Viajes: plan por partidas frente a lo gastado. Los gastos de las fechas del viaje se proponen para que confirmes cuáles son; los pagos de antes se asignan desde el movimiento.','Cada meta tiene su propia lista de tareas.']},
@@ -1866,6 +1867,34 @@ function viewMas(){
 var VIEWS={hoy:viewHoy,tareas:viewTareas,compras:viewComprasTab,habitos:viewHabitos,fin:viewFin,mas:viewMas};
 var elHead=document.getElementById('head'),elMain=document.getElementById('main'),elNav=document.getElementById('nav'),elSheet=document.getElementById('sheet');
 
+/* Botón atrás del móvil: cada pantalla queda en el historial del navegador */
+var NAV_KEYS=['tab','ftab','goal','recipe','mealSub','shopTab','taskTab','hist','fday','fcat','view'],NAV_ALL=NAV_KEYS.concat(['fmonth','date','fhl']);
+var navLast='',navReady=false,navRestoring=false,navExitAt=0,navSheetSkip=false;
+function navSnap(keys){var o={};keys.forEach(function(k){o[k]=ui[k];});return o;}
+function navKey(){return JSON.stringify(navSnap(NAV_KEYS));}
+function navSync(){
+  if(!navReady||navRestoring||!window.history||!history.pushState)return;
+  var k=navKey();if(k===navLast)return;
+  try{history.pushState({mi:1,s:navSnap(NAV_ALL)},'');}catch(e){}
+  navLast=k;
+}
+function navInit(){
+  if(!window.history||!history.pushState)return;
+  try{history.replaceState({mi:1,root:1,s:navSnap(NAV_ALL)},'');history.pushState({mi:1,s:navSnap(NAV_ALL)},'');}catch(e){}
+  navLast=navKey();navReady=true;
+  window.addEventListener('popstate',function(e){
+    var st=e.state||{};
+    if(ui.sheet||news){if(news){news=null;S.seenV=APP_VERSION;save();}if(ui.sheet)closeSheet(true);else renderSheet();try{history.pushState({mi:1,s:navSnap(NAV_ALL)},'');}catch(x){}return;}
+    if(navSheetSkip){navSheetSkip=false;return;}
+    if(st.root){
+      if(Date.now()-navExitAt<2500){history.back();return;}
+      navExitAt=Date.now();ui.msg='Pulsa atrás otra vez para salir de la app.';
+      try{history.pushState({mi:1,s:navSnap(NAV_ALL)},'');}catch(x){}
+      render();return;
+    }
+    if(st.s){navRestoring=true;Object.keys(st.s).forEach(function(k){ui[k]=st.s[k];});ui.confirm='';render();elMain.scrollTop=0;navRestoring=false;navLast=navKey();}
+  });
+}
 function render(){
   var keep=elMain.scrollTop;
   var title=TITLES[ui.tab];
@@ -1881,6 +1910,7 @@ function render(){
     return '<button data-act="tab" data-tab="'+k+'"'+(k===ui.tab?' aria-current="page"':'')+'><svg viewBox="0 0 24 24" aria-hidden="true">'+ICONS[k]+'</svg>'+TITLES[k]+'</button>';
   }).join('');
   window.__render=render;
+  navSync();
   if(ui.focus){var f=document.querySelector(ui.focus);if(f){f.focus();try{var L=f.value.length;f.setSelectionRange(L,L);}catch(e){}}ui.focus='';}
 }
 
@@ -2237,6 +2267,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
 
 var monthly=runMonthly();if(monthly.length){var mt=monthly.filter(function(x){return x.tot>0;});if(mt.length)ui.msg='Reparto automático de '+monthName(mt[mt.length-1].m)+' hecho: revísalo en Finanzas › Metas.';}
 render();
+navInit();
 if(news)renderSheet();
 })();
 </script>

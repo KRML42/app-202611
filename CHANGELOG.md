@@ -2,6 +2,11 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.18.5
+
+- Botón atrás del móvil: cada cambio de pantalla (pestaña, sección de Finanzas, día, meta, receta, historial…) se guarda en el historial del navegador, así que atrás vuelve a la pantalla anterior. Con una hoja o el cuadro de novedades abiertos, atrás los cierra.
+- En la pantalla inicial, el primer atrás muestra "Pulsa atrás otra vez para salir"; el segundo (en menos de 2,5 s) sale.
+
 ## 2026.11.18.4 · Meal prep
 
 - Compras tiene dos vistas: Listas y Meal prep.

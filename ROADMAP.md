@@ -30,6 +30,7 @@ Hoy (día/semana/mes), tareas, metas de ahorro con sobres, meal prep, quehaceres
 | 4 | Metas: sobres dentro de la cuenta de ahorro, reparto mensual, tareas por meta, plantillas, viajes con plan frente a lo gastado | Hecho |
 | 5 | Meal prep: ingredientes con precios por tienda, recetas con coste por ración, plan semanal a lista de compra, ahorro frente a comer fuera | Hecho |
 | 5b | Rescatado de la idea original: resumen semanal, prioridades, gasto rápido con conciliación | Hecho |
+| 5d | Modo demo con perfil ficticio para enseñar la app (en la misma app, almacenamiento aparte) | Hecho |
 | 5c | Efectivo como "caja chica" (el retiro de cajero es un traspaso, no un gasto) | Pendiente |
 | 6 | Previsión de flujo de caja y alertas en Hoy (presupuesto excedido, mínimo de seguridad) | Siguiente |
 | 7 | Según necesidad: IndexedDB cuando el espacio lo pida, copias cifradas con contraseña | Pendiente |

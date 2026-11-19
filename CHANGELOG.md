@@ -2,6 +2,11 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.19 · Modo demo
+
+- **Modo demo (Más › Modo demo):** perfil ficticio completo para enseñar la app sin mostrar datos reales. Se activa con `localStorage['mi-dia-mode']='demo'` y la app recarga; usa claves propias (`mi-dia-demo`, `mi-dia-draft-demo`), así que lo real no se lee ni se escribe. Etiqueta "DEMO" en la cabecera; en Más: "Salir de la demo" y "Reiniciar la demo" (borra solo la demo y regenera el perfil). Sin ventana de novedades. En la demo se ocultan la copia de seguridad y "Borrar todo".
+- **Perfil ficticio (`demoData()`):** fechas relativas a hoy (siempre "reciente"). Dos meses completos y el actual en dos cuentas (corriente y ahorro), con traspasos emparejados, gastos compartidos, un movimiento dividido, notas, 7 por clasificar y 2 gastos apuntados (uno con candidato del banco). Presupuestos, 3 metas (viaje con plan y gastos asignados, vivienda, fondo de emergencia) con repartos, 3 recetas con precios por tienda y tandas, hábitos de los cuatro tipos, tareas con prioridades, quehaceres con historial y listas de compra.
+
 ## 2026.11.18.7 · Lote de mejoras
 
 - **Gasto rápido y conciliación:** apuntes manuales (`fin.pend`) que cuentan en presupuestos y resúmenes. Al importar, cada apunte se une con un movimiento de la misma cuenta y signo entre 1 día antes y 5 días después: si hay un único candidato con el mismo importe, automáticamente; si el importe difiere (hasta 15 %, retenciones) o hay varios, en "Movimientos › Apuntados" para confirmar. El movimiento hereda categoría, nota y reparto (`rec`). Aviso "No apareció en el banco" cuando ya hay extracto 6 días después.

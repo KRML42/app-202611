@@ -48,6 +48,7 @@ button{cursor:pointer;background:none;border:0;padding:0;text-align:inherit}
 #app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
 .top{padding:calc(env(safe-area-inset-top) + 16px) 16px 4px}
 .eyebrow{margin:0;color:var(--muted);font-size:.85rem;font-weight:500}
+.demotag{background:var(--accent);color:var(--accent-ink);padding:1px 8px;border-radius:99px;font-size:.7rem;font-weight:700;letter-spacing:.04em;margin-left:6px;vertical-align:1px}
 h1{margin:0;font:700 2rem/1.1 var(--display);letter-spacing:-.02em;text-wrap:balance}
 main{flex:1;overflow-y:auto;padding:8px 16px 28px;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 .sect{margin:20px 0 0}
@@ -237,9 +238,11 @@ function uid(){return Math.random().toString(36).slice(2,9);}
 function num(x){return String(Math.round(x*10)/10).replace('.',',');}
 
 /* ---------- Datos ---------- */
-var KEY='mi-dia-v1';
-var APP_VERSION='2026.11.18.7';
+var DEMO=false;try{DEMO=localStorage.getItem('mi-dia-mode')==='demo';}catch(e){}
+var KEY=DEMO?'mi-dia-demo':'mi-dia-v1';
+var APP_VERSION='2026.11.19';
 var CHANGES=[
+  {v:'2026.11.19',items:['Modo demo (Más › Modo demo): carga un perfil ficticio completo, con dos meses de finanzas, metas, una receta, hábitos y listas, para enseñar la app sin mostrar tus datos. Tiene su propio almacenamiento: lo que pruebes se guarda en la demo, y tus datos reales no se ven ni se tocan. Sales cuando quieras y puedes reiniciar la demo.']},
   {v:'2026.11.18.7',items:['Apuntar un gasto en segundos (desde Hoy o Movimientos). Cuenta ya en tus presupuestos y, al importar el extracto, se une con el movimiento del banco y le pasa la categoría y la nota.','Resumen semanal: el día que elijas (lunes por defecto) Hoy te muestra tus hábitos, tareas, dinero y metas de los últimos 7 días, y eliges tus prioridades.','Prioridades de la semana: marca cualquier tarea como prioridad cuando quieras y aparecerá en Hoy.','Quehaceres: al marcar uno ves cuándo toca la próxima vez; en Hoy aparecen los «Hechos hoy» (con deshacer), en Tareas › Quehaceres los hechos de los últimos 14 días, y en cada quehacer su historial, donde puedes añadir o quitar días.','Meal prep: al pasar ingredientes a la compra puedes crear una lista nueva en ese momento, o separarlos en una lista por tienda.','Cada ingrediente puede tener su tienda habitual (por ejemplo, el pollo en Consum y la verdura en el mercado). También puedes hacer que las recetas usen ese precio.']},
   {v:'2026.11.18.6',items:['Si la app se recarga por error mientras creas una receta, una meta, un ingrediente o una división, al volver te ofrece recuperar lo que llevabas. Además se ha desactivado el gesto de deslizar hacia abajo para recargar.','Datos de ejemplo: puedes quitar solo los que no uses, o conservarlos y ocultar el aviso, sin borrar nada más.','Hábitos de reducir: el límite puede ser por día o por semana (Editar → Límite).','Hábitos: tocar un círculo de la semana marca o desmarca ese día directamente (hábitos de «hacer»). En los de reducir o dejar, abre un cuadro para corregir ese día.','Resumen de Finanzas: nueva sección «Ingresos y aportaciones», con su historial.','Seleccionar varios movimientos (mantén pulsado uno, o «Seleccionar») y cambiarlos de categoría de una vez. «Todos» marca todos los de la lista.','Desde el historial de una categoría: «Ver todos los movimientos», de todos los meses.','Corregido: el cuadro de novedades no aparecía a quien no había guardado ningún cambio desde que instaló la app.']},
   {v:'2026.11.18.5',items:['El botón atrás del móvil te lleva a la pantalla anterior de la app (por ejemplo, de un día en Movimientos a «Por clasificar»), y cierra los cuadros abiertos.','Para salir de la app hay que pulsar atrás dos veces seguidas: la primera muestra un aviso.']},
@@ -271,6 +274,162 @@ function viewDemo(){
     '<button class="btn primary" type="submit">Quitar los marcados</button></form>';
   out+='<button class="btn block" data-act="demo-keep" style="margin-top:8px">Conservar todo y no volver a avisar</button>';
   return out+'</section>';
+}
+
+/* ---------- Perfil ficticio para el modo demo ---------- */
+function demoData(){
+  var T=todayStr(),cm=T.slice(0,7),pm=ymAdd(cm,-1),pp=ymAdd(cm,-2);
+  function d(n){return addDays(T,-n);}
+  var sd=(+cm.slice(0,4))*12+(+cm.slice(5,7));
+  var rs=sd*7919>>>0;
+  function rnd(){rs=(rs+0x6D2B79F5)>>>0;var t=rs;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
+  function R(lo,hi){return r2(lo+rnd()*(hi-lo));}
+  function pick(a){return a[Math.floor(rnd()*a.length)];}
+  var F=newFin(),M=newMeal();
+  F.accounts=[{id:'a1',name:'Cuenta corriente',type:'corriente'},{id:'a2',name:'Cuenta de ahorro',type:'ahorro'}];
+  F.paired=true;
+  var gI={id:uid(),type:'viaje',name:'Viaje a Italia',target:3200,min:2600,due:ymAdd(cm,7),pct:40,note:'Roma y Florencia, una semana',created:d(70),start:addDays(T,250),end:addDays(T,257)};
+  var gC={id:uid(),type:'vivienda',name:'Entrada del piso',target:18000,min:0,due:ymAdd(cm,36),pct:40,note:'',created:d(70)};
+  var gE={id:uid(),type:'emergencia',name:'Fondo de emergencia',target:6000,min:0,due:'',pct:20,note:'',created:d(70)};
+  var TP=[['Vuelos y transporte',30],['Alojamiento',30],['Comida',15],['Actividades',10],['Transporte local',5],['Compras y otros',0],['Colchón',10]],HP=[['Entrada',70],['Gastos de compra',20],['Mudanza y muebles',10]];
+  gI.plan=TP.map(function(x){return {n:x[0],amt:r2(gI.target*x[1]/100)};});
+  gC.plan=HP.map(function(x){return {n:x[0],amt:r2(gC.target*x[1]/100)};});gE.plan=[];
+  F.goals=[gI,gC,gE];F.goalStart=ymAdd(cm,-3);
+  F.alloc=[{id:uid(),goal:gE.id,amt:3200,date:d(95),kind:'manual',note:'desde sin asignar'},{id:uid(),goal:gC.id,amt:3900,date:d(95),kind:'manual',note:'desde sin asignar'},{id:uid(),goal:gI.id,amt:650,date:d(95),kind:'manual',note:'desde sin asignar'}];
+  F.budgets={'Vivienda':700,'Alimentación':380,'Restauración':110,'Transporte':60,'Salud':60,'Cuidado personal':60,'Compras':100,'Ocio y cultura':80,'Formación y trabajo':30};
+  F.shares=[{id:uid(),cat:'Vivienda',sub:'Alquiler/Hipoteca',mode:'amt',v:550,from:''},{id:uid(),cat:'Vivienda',sub:'Luz',mode:'pct',v:50,from:''},{id:uid(),cat:'Vivienda',sub:'Agua',mode:'pct',v:50,from:''},{id:uid(),cat:'Vivienda',sub:'Gas',mode:'pct',v:50,from:''},{id:uid(),cat:'Vivienda',sub:'Internet y móvil',mode:'pct',v:50,from:''}];
+  function rl(t,c,sb){return {id:uid(),text:norm(t),cat:c,sub:sb,ref:null,weak:false};}
+  F.rules=F.rules.concat([rl('mercadona','Alimentación','Supermercado'),rl('consum','Alimentación','Supermercado'),rl('bonpreu','Alimentación','Supermercado'),rl('carrefour','Alimentación','Supermercado'),rl('tmb','Transporte','Transporte público'),rl('spotify','Ocio y cultura','Suscripciones'),rl('netflix','Ocio y cultura','Suscripciones'),rl('basic fit','Cuidado personal','Gimnasio y deporte'),rl('cabify','Transporte','Taxi/VTC'),rl('farmacia','Salud','Farmacia')]);
+  var ev=[];
+  function add(date,c,m,a,cat,sub,extra){var e={date:date,c:c,m:m,a:a,cat:cat||'',sub:sub||'',acc:'a1'};if(extra)for(var k in extra)e[k]=extra[k];ev.push(e);}
+  var CARD='PAGO CON TARJETA';
+  [[pp,0],[pm,1],[cm,2]].forEach(function(mm){
+    var ym=mm[0],k=mm[1],last=k===2?+T.slice(8,10):28,frac=Math.max(0.15,last/28);
+    function dy(n){return ym+'-'+(n<10?'0':'')+n;}
+    function fx(n,c,m,a,cat,sub,extra){if(n<=last)add(dy(n),c,m,a,cat,sub,extra);}
+    function vr(n,list,lo,hi,cat,sub,m){var q=Math.max(k===2?1:n,Math.round(n*frac));if(k<2)q=n;for(var i=0;i<q;i++)add(dy(1+Math.floor(rnd()*last)),pick(list),m||CARD,-R(lo,hi),cat,sub);}
+    fx(1,'TMB RECARGA T-USUAL',CARD,-40,'Transporte','Transporte público');
+    fx(2,'RECIBO INMOBILIARIA TRAMUNTANA','RECIBO',-1100,'Vivienda','Alquiler/Hipoteca');
+    fx(3,'BIZUM DE MARTA RUIZ','BIZUM RECIBIDO',550,'Pareja','Aportación');
+    fx(3,'SPOTIFY AB',CARD,-10.99,'Ocio y cultura','Suscripciones');
+    fx(4,'RECIBO ENDESA ENERGIA','RECIBO',-R(48,72),'Vivienda','Luz');
+    fx(6,'BASIC-FIT BARCELONA','RECIBO',-29.99,'Cuidado personal','Gimnasio y deporte');
+    fx(9,'RECIBO AIGUES DE BARCELONA','RECIBO',-R(24,34),'Vivienda','Agua');
+    fx(10,'RECIBO MOVISTAR','RECIBO',-49.9,'Vivienda','Internet y móvil');
+    fx(12,'RECIBO NATURGY','RECIBO',-R(30,46),'Vivienda','Gas');
+    fx(14,'NETFLIX.COM',CARD,-13.99,'Ocio y cultura','Suscripciones');
+    fx(18,'DONACION CRUZ ROJA','RECIBO',-10,'Regalos y donaciones','Donaciones');
+    fx(1,'NOMINA ESTUDIO ALBA SL','TRANSFERENCIA RECIBIDA',2180.4,'Ingresos','Nómina');
+    if(last>=3)ev.push({date:dy(3),c:'TRASPASO A CUENTA DE AHORRO',m:'TRANSFERENCIA',a:k===0?-600:-550,cat:'',sub:'',acc:'a1',tr:true});
+    vr(8,['MERCADONA','CONSUM','BONPREU','CARREFOUR EXPRESS'],14,68,'Alimentación','Supermercado');
+    vr(3,['PARADA FRUTAS MARIA'],8,19,'Alimentación','Mercado/fresco');
+    vr(3,['PANADERIA CAN JOAN'],2.2,5.8,'Alimentación','Mercado/fresco');
+    var nr=k===1?4:k===0?2:3;
+    for(var i=0;i<(k===2?Math.max(1,Math.round(nr*frac)):nr);i++)add(dy(1+Math.floor(rnd()*last)),pick(['RESTAURANTE EL XUFA','TASCA LA PLAZA','PIZZERIA LA NONNA','RESTAURANTE CAN VILARO']),CARD,-R(24,52),'Restauración','Restaurantes');
+    vr(5,['CAFETERIA GRANO','CAFES EL MAGNIFIC','CAFETERIA LA ESQUINA'],2.1,4.6,'Restauración','Cafés y bares');
+    vr(2,['GLOVO'],15,26,'Restauración','Comida a domicilio');
+    vr(1,['CABIFY'],9,17,'Transporte','Taxi/VTC');
+    vr(1,['FARMACIA BALMES'],5,16,'Salud','Farmacia');
+    vr(2,['AMAZON EU'],14,48,'Compras','Electrónica');
+    vr(1,['PELUQUERIA STILO'],16,22,'Cuidado personal','Peluquería');
+    vr(1,['CINESA DIAGONAL'],8.5,17,'Ocio y cultura','Cine y eventos');
+    if(k===0){fx(20,'UDEMY',CARD,-14.99,'Formación y trabajo','Cursos');fx(21,'BIZUM DE CLIENTE FREELANCE','BIZUM RECIBIDO',180,'Ingresos','Extras');}
+    if(k===1){fx(8,'STEAM GAMES',CARD,-24.99,'Ocio y cultura','Videojuegos');fx(16,'CASA DEL LLIBRE',CARD,-19.5,'Formación y trabajo','Libros');fx(22,'CLINICA DENTAL SOMRIURE',CARD,-65,'Salud','Médico y dentista');fx(24,'ABONO DEVOLUCION AMAZON','ABONO',24.99,'Ingresos','Reembolsos');}
+  });
+  var plus=[
+    {date:d(33),c:'VUELING AIRLINES',m:CARD,a:-412.3,cat:'Viajes',sub:'Transporte',goal:gI.id,gpart:'Vuelos y transporte'},
+    {date:d(6),c:'BOOKING.COM',m:CARD,a:-198,cat:'Viajes',sub:'Alojamiento',goal:gI.id,gpart:'Alojamiento'},
+    {date:d(20),c:'MERCADONA',m:CARD,a:-63.7,cat:'',sub:'',sp:[{a:-52.3,cat:'Alimentación',sub:'Supermercado'},{a:-11.4,cat:'Cuidado personal',sub:'Cosmética e higiene'}]},
+    {date:d(11),c:'ZARA BARCELONA',m:CARD,a:-39.95,cat:'Compras',sub:'Regalos',n:'Regalo de cumpleaños de Pau'},
+    {date:d(2),c:'REINTEGRO CAJERO',m:'REINTEGRO EN CAJERO',a:-60,cat:'',sub:''},
+    {date:d(9),c:'REINTEGRO CAJERO',m:'REINTEGRO EN CAJERO',a:-40,cat:'',sub:''},
+    {date:d(5),c:'BAR LA PLAZA',m:CARD,a:-23.5,cat:'',sub:''},
+    {date:d(14),c:'TRANSFERENCIA A JORDI M',m:'TRANSFERENCIA',a:-80,cat:'',sub:''},
+    {date:d(3),c:'RESTAURANTE CAL PEP',m:CARD,a:-19.4,cat:'',sub:''},
+    {date:d(26),c:'ZZ TIENDA 4821',m:CARD,a:-12.9,cat:'',sub:''},
+    {date:d(40),c:'BIZUM A DAVID',m:'BIZUM ENVIADO',a:-15,cat:'',sub:''}
+  ];
+  plus.forEach(function(e){e.acc='a1';ev.push(e);});
+  ev=ev.filter(function(e){return e.date<=T;});
+  ev.forEach(function(e,i){e.o=i;});
+  ev.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:a.o-b.o;});
+  var run=0,mn=0;ev.forEach(function(e){run+=e.a;if(run<mn)mn=run;});
+  var bal={a1:Math.max(900,731.4-mn),a2:8200},nA={a1:0,a2:0},txns=[],outs=[];
+  ev.forEach(function(e){
+    var t={id:uid(),acc:'a1',k:'demo|a1|'+(nA.a1++),dv:e.date,df:e.date,c:e.c,m:e.m,o:'',a:e.a,b:0,i:0,src:'',cat:e.cat,sub:e.sub,man:false};
+    bal.a1=r2(bal.a1+e.a);t.b=bal.a1;
+    if(e.sp)t.sp=e.sp;if(e.n)t.n=e.n;if(e.goal){t.goal=e.goal;t.gpart=e.gpart;}
+    txns.push(t);
+    if(e.tr){
+      var u={id:uid(),acc:'a2',k:'demo|a2|'+(nA.a2++),dv:e.date,df:e.date,c:'TRASPASO DESDE CUENTA CORRIENTE',m:'TRANSFERENCIA RECIBIDA',o:'',a:-e.a,b:0,i:0,src:'',cat:'',sub:'',man:false};
+      bal.a2=r2(bal.a2-e.a);u.b=bal.a2;t.tr=u.id;t.trAcc='a2';u.tr=t.id;u.trAcc='a1';txns.push(u);
+    }
+  });
+  ['a1','a2'].forEach(function(ac){
+    var l=txns.filter(function(t){return t.acc===ac;}),mx=l.length?l[l.length-1].df:'';
+    l.forEach(function(t,ix){t.i=l.length-1-ix;t.src=mx;});
+  });
+  F.txns=txns;
+  [[pp,600],[pm,550]].forEach(function(x){F.goals.forEach(function(g){var v=r2(x[1]*g.pct/100);if(v>0)F.alloc.push({id:uid(),goal:g.id,amt:v,date:x[0]+'-28',kind:'auto',m:x[0]});});});
+  F.allocDone=pm;F.cardM=pm;
+  F.pend=[{id:uid(),created:d(4),a:-18,cat:'Restauración',sub:'Restaurantes',n:'Cena con Pau',date:d(4),acc:'a1'},{id:uid(),created:T,a:-9.5,cat:'Restauración',sub:'Cafés y bares',n:'Café y tostada con Marta',date:T,acc:'a1'}];
+  /* Meal prep */
+  function ing(name,unit,prices,pref){return {id:uid(),name:name,unit:unit,pref:pref||undefined,prices:prices.map(function(p){return {id:uid(),store:p[0],price:p[1],qty:p[2],date:d(p[3]||12)};})};}
+  var I={
+    pollo:ing('Pechuga de pollo','g',[['Mercadona',6.95,800,12],['Consum',7.4,800,9]],'Mercadona'),
+    arroz:ing('Arroz','g',[['Mercadona',1.15,1000,12],['Carrefour',1.29,1000,20]]),
+    brocoli:ing('Brócoli','g',[['Verdulería',1.8,1000,8],['Mercadona',2.35,1000,12]],'Verdulería'),
+    zanahoria:ing('Zanahoria','g',[['Verdulería',1.1,1000,8],['Mercadona',1.25,1000,12]]),
+    cebolla:ing('Cebolla','g',[['Verdulería',1.4,1000,8]]),
+    aceite:ing('Aceite de oliva','ml',[['Mercadona',8.95,1000,12],['Carrefour',9.4,1000,20]]),
+    lentejas:ing('Lentejas','g',[['Mercadona',1.65,1000,12],['Consum',1.8,1000,15]]),
+    pimiento:ing('Pimiento rojo','g',[['Verdulería',2.9,1000,8]]),
+    pasta:ing('Pasta','g',[['Mercadona',1.05,1000,12],['Carrefour',1.2,1000,20]]),
+    carne:ing('Carne picada','g',[['Consum',5.2,600,9],['Mercadona',5.5,600,12]]),
+    tomate:ing('Tomate triturado','g',[['Mercadona',1.1,800,12]])
+  };
+  M.ings=Object.keys(I).map(function(k){var x=I[k];if(x.pref===undefined)delete x.pref;return x;});
+  function rec(name,sv,items){return {id:uid(),name:name,servings:sv,mp:true,items:items.map(function(x){return {ing:I[x[0]].id,qty:x[1]};})};}
+  var R1=rec('Pollo con arroz y verduras',5,[['pollo',750],['arroz',400],['brocoli',400],['zanahoria',300],['cebolla',150],['aceite',30]]);
+  var R2=rec('Lentejas con verduras',5,[['lentejas',500],['zanahoria',250],['cebolla',150],['pimiento',200],['aceite',30]]);
+  var R3=rec('Pasta boloñesa',5,[['pasta',500],['carne',600],['tomate',800],['cebolla',150],['aceite',20]]);
+  M.recipes=[R1,R2,R3];
+  function per(r){var tot=0;r.items.forEach(function(it){var ig=M.ings.filter(function(x){return x.id===it.ing;})[0],best=null;ig.prices.forEach(function(p){var u=p.price/p.qty;if(best==null||u<best)best=u;});tot+=best*it.qty;});return r2(tot/r.servings);}
+  function batch(r,daysAgo,eaten){var b={id:uid(),recipe:r.id,servings:r.servings,date:d(daysAgo),per:per(r),cost:r2(per(r)*r.servings)};M.batches.push(b);
+    for(var i=0;i<eaten;i++){var dt=addDays(b.date,1+i+(i>=3?2:0));if(dt<=T)M.logs.push({id:uid(),date:dt,batch:b.id});}return b;}
+  batch(R2,24,5);batch(R1,14,5);batch(R3,4,3);
+  /* Hábitos, tareas, quehaceres, listas */
+  var log={};function put(date,id,v){(log[date]=log[date]||{})[id]=v;}
+  var h1={id:uid(),name:'Hacer ejercicio',type:'do',target:4,created:d(60)},h2={id:uid(),name:'Leer 20 minutos',type:'do',target:5,created:d(60)},h3={id:uid(),name:'Comer dulces',type:'reduce',limit:5,per:'semana',created:d(60)},h4={id:uid(),name:'Redes sociales antes de dormir',type:'quit',start:d(25)};
+  for(var n=0;n<60;n++){var dt=d(n),wd=parse(dt).getDay();
+    if((wd===1||wd===3||wd===5||wd===6)&&rnd()<0.78)put(dt,h1.id,1);
+    if(wd!==0&&wd!==6&&rnd()<0.7)put(dt,h2.id,1);
+    if(rnd()<0.42)put(dt,h3.id,1+Math.floor(rnd()*2));}
+  var tasks=[
+    {id:uid(),title:'Revisar la factura de internet',due:T,area:'Hogar',done:false},
+    {id:uid(),title:'Comprar el regalo de cumpleaños de Pau',due:addDays(T,4),area:'',done:false,star:true},
+    {id:uid(),title:'Reunir documentos de la declaración de la renta',due:addDays(T,9),area:'Papeles',done:false,star:true},
+    {id:uid(),title:'Llamar al dentista',due:addDays(T,2),area:'',done:false},
+    {id:uid(),title:'Arreglar el pinchazo de la bici',due:'',area:'Hogar',done:false},
+    {id:uid(),title:'Renovar el seguro del hogar',due:d(1),area:'Papeles',done:true,doneAt:d(1)},
+    {id:uid(),title:'Pedir días libres para el viaje',due:addDays(T,14),area:gI.name,done:false,goal:gI.id},
+    {id:uid(),title:'Reservar los trenes Roma-Florencia',due:addDays(T,30),area:gI.name,done:false,goal:gI.id},
+    {id:uid(),title:'Contratar seguro de viaje',due:'',area:gI.name,done:false,goal:gI.id}
+  ];
+  var chores=[
+    {id:uid(),title:'Aspirar el salón',area:'Salón',every:4,last:d(3),hist:[d(11),d(7),d(3)]},
+    {id:uid(),title:'Limpiar el baño',area:'Baño',every:7,last:d(5),hist:[d(19),d(12),d(5)]},
+    {id:uid(),title:'Sacar la basura',area:'Cocina',every:2,last:T,hist:[d(6),d(4),d(2),T]},
+    {id:uid(),title:'Cambiar las sábanas',area:'Dormitorio',every:14,last:d(10),hist:[d(24),d(10)]},
+    {id:uid(),title:'Limpiar la nevera',area:'Cocina',every:30,last:d(28),hist:[d(28)]},
+    {id:uid(),title:'Regar las plantas',area:'Terraza',every:3,last:d(1),hist:[d(7),d(4),d(1)]}
+  ];
+  var lists=[
+    {id:uid(),name:'Súper',items:[{id:uid(),text:'Huevos',done:false},{id:uid(),text:'Leche',done:false},{id:uid(),text:'Plátanos',done:false},{id:uid(),text:'Yogures',done:true},{id:uid(),text:'Pan',done:false}],freq:{'Huevos':5,'Leche':6,'Plátanos':4,'Pan':5,'Yogures':3}},
+    {id:uid(),name:'Hogar',items:[{id:uid(),text:'Detergente',done:false},{id:uid(),text:'Bolsas de basura',done:false}],freq:{'Papel higiénico':3,'Bolsas de basura':3}},
+    {id:uid(),name:'Mercadona (meal prep)',items:[{id:uid(),text:'Pechuga de pollo · 750 g',done:false},{id:uid(),text:'Arroz · 400 g',done:false},{id:uid(),text:'Aceite de oliva · 30 ml',done:true}],freq:{}}
+  ];
+  return {v:1,demo:false,prefs:{reviewDay:1},seenV:APP_VERSION,appv:APP_VERSION,fin:F,meal:M,tasks:tasks,chores:chores,habits:[h1,h2,h3,h4],log:log,lists:lists};
 }
 function blank(){
   return {v:1,demo:false,prefs:{reviewDay:1},fin:newFin(),meal:newMeal(),tasks:[],chores:[],habits:[],log:{},lists:[
@@ -333,11 +492,11 @@ function normalize(o){
 var hadStored=false;
 function load(){
   try{var raw=localStorage.getItem(KEY);if(raw){hadStored=true;var o=JSON.parse(raw);if(o&&o.v===1&&o.tasks&&o.lists&&o.habits&&o.chores)return normalize(o);}}catch(e){}
-  return normalize(seed());
+  return normalize(DEMO?demoData():seed());
 }
 var S=load();
 var news=null;
-(function(){var prev=S.seenV||S.appv||'';
+(function(){if(DEMO){S.seenV=APP_VERSION;return;}var prev=S.seenV||S.appv||'';
   if(!prev){if(hadStored)news=CHANGES.slice(0,1);else{S.seenV=APP_VERSION;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}return;}
   if(prev<APP_VERSION){var n=CHANGES.filter(function(c){return c.v>prev;});if(n.length)news=n;}})();
 if(S.__pair){delete S.__pair;try{pairTransfers();}catch(e){}}
@@ -2082,22 +2241,24 @@ function viewHabitos(){
 
 function viewMas(){
   var out='';
+  if(DEMO)out+='<section class="sect"><h2>Modo demo</h2><p class="note">Estás en una copia con datos ficticios. Lo que añadas aquí se guarda en la demo y no toca tus datos reales.</p><button class="btn primary block" data-act="demo-off">Salir de la demo y volver a mi app</button><button class="btn block" data-act="demo-reset" style="margin-top:8px">'+(ui.confirm==='demo-reset'?'Se pierde lo que hayas probado. Pulsa otra vez':'Reiniciar la demo (datos de ejemplo de cero)')+'</button></section>';
   var used=0;try{used=(localStorage.getItem(KEY)||'').length;}catch(e){}
   var pct=Math.min(100,Math.round(used/5000000*100));
-  out+='<section class="sect"><h2>Copia de seguridad</h2>';
+  if(!DEMO){out+='<section class="sect"><h2>Copia de seguridad</h2>';
   out+='<button class="btn primary block" data-act="bk-file">Descargar copia (archivo)</button>';
   out+='<label class="btn block" style="text-align:center;margin-top:8px">Cargar copia desde archivo<input id="bk-in" type="file" accept=".json,application/json,text/plain" hidden></label>';
   out+='<p class="note">Al cargar un archivo, su contenido aparece abajo. Revisa y pulsa «Restaurar» para confirmar. También puedes copiar y pegar el texto.</p>';
   out+='<p class="note">'+(storageOK?'Tus datos se guardan solo en este dispositivo. Si borras los datos del navegador o desinstalas la app, se pierden: descarga una copia cada cierto tiempo y guárdala en un sitio privado.':'Este navegador no permite guardar datos entre visitas. Copia el texto de abajo para conservarlos.')+'</p>';
   out+='<textarea id="bk" aria-label="Copia de seguridad" spellcheck="false">'+esc(ui.bk)+'</textarea>';
   out+='<div class="addopts" style="margin-top:8px"><button class="btn" data-act="bk-make">Generar copia</button><button class="btn" data-act="bk-copy">Copiar</button></div>';
-  out+='<button class="btn block" data-act="bk-restore">'+(ui.confirm==='restore'?'Esto reemplaza tus datos. Pulsa otra vez':'Restaurar desde el texto')+'</button></section>';
+  out+='<button class="btn block" data-act="bk-restore">'+(ui.confirm==='restore'?'Esto reemplaza tus datos. Pulsa otra vez':'Restaurar desde el texto')+'</button></section>';}
   if(S.demo&&demoLeft().length)out+=viewDemo();
-  out+='<section class="sect"><h2>Empezar de cero</h2><p class="note">Borra <b>todo</b>: hábitos, tareas, listas, finanzas, metas y meal prep. Si solo quieres quitar los ejemplos, usa «Datos de ejemplo». Descarga antes una copia.</p>';
-  out+='<button class="btn danger block" data-act="reset">'+(ui.confirm==='reset'?'Se borra todo. Pulsa otra vez':'Borrar todo y empezar de cero')+'</button></section>';
+  if(!DEMO)out+='<section class="sect"><h2>Empezar de cero</h2><p class="note">Borra <b>todo</b>: hábitos, tareas, listas, finanzas, metas y meal prep. Si solo quieres quitar los ejemplos, usa «Datos de ejemplo». Descarga antes una copia.</p>';
+  if(!DEMO)out+='<button class="btn danger block" data-act="reset">'+(ui.confirm==='reset'?'Se borra todo. Pulsa otra vez':'Borrar todo y empezar de cero')+'</button></section>';
   out+='<section class="sect"><h2>Espacio</h2><p class="note">Usas '+(used/1e6).toFixed(2).replace('.',',')+' MB de unos 5 MB disponibles ('+pct+' %).'+(pct>=70?' <b class="warnt">Se está llenando: avísame para pasar a un almacenamiento más grande.</b>':'')+'</p><span class="bar'+(pct>=90?' over':pct>=70?' warn':'')+'"><i style="width:'+Math.max(pct,2)+'%"></i></span></section>';
   var DN=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],rd=(S.prefs&&S.prefs.reviewDay!=null)?+S.prefs.reviewDay:1;
   out+='<section class="sect"><h2>Resumen semanal</h2><label>Día en que aparece<select id="rv-day">'+[1,2,3,4,5,6,0].map(function(k){return '<option value="'+k+'"'+(k===rd?' selected':'')+'>'+DN[k]+'</option>';}).join('')+'</select></label><p class="note">Ese día, Hoy te ofrece el resumen de los últimos 7 días. También está siempre en Hoy › Semana.</p></section>';
+  if(!DEMO)out+='<section class="sect"><h2>Modo demo</h2><p class="note">Un perfil ficticio completo para enseñar la app a otras personas sin mostrar tus datos. Tiene su propio almacenamiento y puedes salir cuando quieras: tus datos reales no se tocan.</p><button class="btn block" data-act="demo-on">Entrar en el modo demo</button></section>';
   out+='<section class="sect"><h2>Novedades</h2><button class="btn block" data-act="news-all">Ver las novedades de cada versión</button></section>';
   out+='<section class="sect"><h2>Acerca de</h2><p class="note">Mi Día, versión '+APP_VERSION+'. Tus datos se guardan solo en este dispositivo. Aquí no hay recordatorios ni notificaciones: la pantalla Hoy muestra el estado cada vez que la abres.</p></section>';
   return out;
@@ -2139,7 +2300,7 @@ function render(){
   var keep=elMain.scrollTop;
   var title=TITLES[ui.tab];
   if(ui.tab==='hoy'){title=ui.view==='semana'?'Semana':ui.view==='mes'?'Mes':(ui.date===todayStr()?'Hoy':'Otro día');}
-  elHead.innerHTML='<p class="eyebrow">'+(ui.tab==='hoy'?fmtDate(todayStr()):'Mi Día')+'</p><h1>'+title+'</h1>';
+  elHead.innerHTML='<p class="eyebrow">'+(ui.tab==='hoy'?fmtDate(todayStr()):'Mi Día')+(DEMO?' <span class="demotag">DEMO</span>':'')+'</p><h1>'+title+'</h1>';
   var top='';
   if(saveFailed)top+='<div class="toast" role="alert"><span>No se pudieron guardar los últimos cambios: el almacenamiento está lleno o bloqueado. Descarga una copia en Más.</span></div>';
   if(window.__newVersion)top+='<div class="toast"><span>Hay una versión nueva de la app.</span><button data-act="reload">Actualizar</button></div>';
@@ -2198,7 +2359,7 @@ function collect(){
   return vals;
 }
 /* Borradores: los formularios largos se guardan mientras escribes y se pueden recuperar si la app se recarga */
-var DRAFT_KEY='mi-dia-draft',pendingDraft=null,sheetDirty=false;
+var DRAFT_KEY=DEMO?'mi-dia-draft-demo':'mi-dia-draft',pendingDraft=null,sheetDirty=false;
 var DRAFTS={
   recipe:function(id){openRecipeSheet(id?recOf(id):null);},
   ing:function(id){openIngSheet(id?ingOf(id):null);},
@@ -2484,6 +2645,9 @@ function act(a,ds){
       }catch(e){ui.confirm='';ui.bk=document.getElementById('bk').value;alert_('El texto no es una copia válida.');return;}
       break;
     case 'demo-review':ui.tab='mas';elMain.scrollTop=0;break;
+    case 'demo-on':try{localStorage.setItem('mi-dia-mode','demo');}catch(e){}location.reload();return;
+    case 'demo-off':try{localStorage.removeItem('mi-dia-mode');}catch(e){}location.reload();return;
+    case 'demo-reset':if(ui.confirm!=='demo-reset'){ui.confirm='demo-reset';break;}try{localStorage.removeItem(KEY);localStorage.removeItem(DRAFT_KEY);}catch(e){}location.reload();return;
     case 'demo-keep':S.demo=false;ui.msg='Listo: no volverá a aparecer el aviso.';save();break;
     case 'reset':
       if(ui.confirm!=='reset'){ui.confirm='reset';break;}

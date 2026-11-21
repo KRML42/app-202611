@@ -17,7 +17,7 @@ App personal de organización diaria y finanzas. Un solo usuario, sin servidor, 
 
 ## Estado actual
 
-Hoy (día/semana/mes), tareas, metas de ahorro con sobres, meal prep, quehaceres recurrentes, listas de compra, hábitos (hacer, reducir, dejar), finanzas (importación del banco, reglas que aprenden, notas, dividir movimientos, gastos compartidos, traspasos entre cuentas, resumen, presupuestos), copia de seguridad en archivo o texto.
+Hoy (día/semana/mes), tareas, metas de ahorro con sobres, meal prep, quehaceres recurrentes, listas de compra, hábitos (hacer, reducir, dejar), finanzas (importación del banco, reglas que aprenden, notas, dividir movimientos, gastos compartidos, traspasos entre cuentas, resumen, presupuestos, fijos con detección, previsión de saldo y avisos), copia de seguridad en archivo, texto o por correo (con recordatorio), modo demo.
 
 ## Fases
 
@@ -26,13 +26,17 @@ Hoy (día/semana/mes), tareas, metas de ahorro con sobres, meal prep, quehaceres
 | 1 | Base técnica ligera: fuentes locales, apertura sin conexión, versión, aviso de actualización, copia en archivo, indicador de espacio | Hecho |
 | 2 | Mejoras de uso: notas en movimientos, editar elementos de listas, ordenar "Por clasificar" y ver el día | Hecho |
 | 3 | Finanzas 2.0: dividir movimientos, gastos compartidos (informativo, sin deudas), traspasos emparejados entre cuentas | Hecho |
-| 3b | Gastos recurrentes y suscripciones (junto con la previsión) | Pendiente |
+| 3b | Gastos recurrentes y suscripciones: detección, emparejamiento con el banco, aviso de cambio de importe | Hecho (sin subir) |
 | 4 | Metas: sobres dentro de la cuenta de ahorro, reparto mensual, tareas por meta, plantillas, viajes con plan frente a lo gastado | Hecho |
 | 5 | Meal prep: ingredientes con precios por tienda, recetas con coste por ración, plan semanal a lista de compra, ahorro frente a comer fuera | Hecho |
 | 5b | Rescatado de la idea original: resumen semanal, prioridades, gasto rápido con conciliación | Hecho |
 | 5d | Modo demo con perfil ficticio para enseñar la app (en la misma app, almacenamiento aparte) | Hecho |
+| 5e | Copia por correo con recordatorio, buscador y edición de reglas | Hecho (sin subir) |
+| 5f | Resumen semanal por balance de categoría; meal prep con desayunos | Hecho (sin subir) |
 | 5c | Efectivo como "caja chica" (el retiro de cajero es un traspaso, no un gasto) | Pendiente |
-| 6 | Previsión de flujo de caja y alertas en Hoy (presupuesto excedido, mínimo de seguridad) | Siguiente |
+| 6 | Previsión de flujo de caja a 30 días, «libre hasta la nómina» con nómina de fecha variable, mínimo de seguridad en € o %, avisos en Hoy | Hecho (sin subir) |
+| 6c | Mejoras posibles de la previsión: horizonte de 60/90 días, escenarios ("¿y si compro X?"), gastos anuales repartidos, meses con pagas extra | Idea |
+| 6b | Primeros pasos y ayuda: elegir qué módulos usar, ayuda en contexto, guías cortas por tarea con capturas de la demo | Idea anotada |
 | 7 | Según necesidad: IndexedDB cuando el espacio lo pida, copias cifradas con contraseña | Pendiente |
 
 ## Fuera de alcance

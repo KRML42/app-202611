@@ -2,6 +2,30 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.21 · Fijos, previsión y avisos (fase 6 + 3b)
+
+- **Fijos (`S.fin.recur`):** cada fijo guarda nombre, importe con signo, frecuencia (semanal, mensual, trimestral, anual), día habitual (`off`; si los días caen a ambos lados del cambio de mes se guarda como desplazamiento desde el día 1, `bd`), margen de retraso (`win`, para ingresos), si el importe varía (`vr`), texto del banco (`key`), categoría y fecha de inicio (`start`/`since`). `recMatchTx()` empareja cada movimiento real por palabras del texto, signo y tolerancia de importe; la próxima fecha sale del último movimiento emparejado (`recNext()`/`recStep()`), anclada al ciclo más cercano, así una nómina adelantada no se confunde con la del mes siguiente. Un fijo sin texto del banco avanza por calendario.
+- **Detección (`recDetect()`):** agrupa los movimientos de cuentas corrientes por texto sin cifras ni «recibo»; propone los que se repiten cada mes (3 veces o más), semana (4), trimestre (3) o año (2) con importe estable (±12 %). El importe variable (luz, agua) solo si es mensual, de 15 € o más y con intervalos de 25 a 37 días. Descartar guarda la clave en `recurNo`. No propone lo que ya está cubierto por un fijo con palabras en común.
+- **Previsión (`forecast(n, late)`):** saldo del último extracto de las cuentas corrientes, más lo apuntado después y una estimación de gasto variable desde el extracto, más los fijos en su fecha. El gasto variable diario es la media de los últimos 3 meses completos sin fijos, viajes ni gastos no mensuales. Un gasto que venció sin aparecer cuenta hoy; un ingreso que no llega no cuenta. El escenario `late` retrasa los ingresos hasta el último día de su margen.
+- **Libre hasta la nómina (`freePay()`):** punto más bajo del escenario `late` antes de cobrar el mayor ingreso fijo de categoría Ingresos, menos el mínimo de seguridad; también en €/día.
+- **Mínimo de seguridad (`S.fin.safe`):** en euros o en % del gasto mensual medio; se guarda lo que el usuario escribió (`src`) y el otro valor se calcula.
+- **Avisos (`finAlerts()`):** saldo previsto bajo el mínimo (o negativo), presupuestos pasados y cerca del límite (agrupados), cargos de los próximos 7 días, fijos que no aparecen, cambios de importe (con «Aceptar nuevo importe») y fijos detectados por confirmar. Cada aviso tiene clave propia: «Luego» lo oculta 3 días y «Silenciar» de forma permanente (`alertOff`).
+- **Pantallas:** Hoy › tarjeta Dinero; Finanzas › Previsión (tiles, gráfico SVG con línea del peor caso, avisos, próximos movimientos, cómo se calcula) y Fijos (totales al mes y al año, detectados, lista, alta manual).
+- **Nómina hasta el último día hábil:** un ingreso mensual puede tener `lastBiz`: su fecha esperada se limita al último día hábil del mes (sin contar fines de semana ni festivos) y ese es el peor caso de la previsión. Se activa solo al detectar ingresos que llegan el día 25 o después, y se puede cambiar en la hoja del fijo.
+- **Fijos cada 2 meses (`bim`):** detección (intervalos de 52 a 70 días; 3 recibos, o 2 si el importe es estable), importe variable por mediana, paso de 2 meses y equivalente mensual de la mitad. Al registrarlos como fijos salen de la media de gasto variable y se colocan en su fecha.
+- **Demo:** nómina con día variable, nueve fijos confirmados, cuatro por detectar, mínimo de 400 € y un cambio de precio en Spotify.
+- Pruebas nuevas: `f6_test.js` (detección, emparejamiento, ciclos de fin de mes, previsión con cifras controladas, avisos, mínimo cifra↔%, persistencia y datos antiguos).
+
+## 2026.11.19.2 · Balance por categoría y desayunos
+
+- **Resumen semanal por balance de categoría:** `spendResid()` compensa, dentro de cada categoría, los ingresos o devoluciones con los gastos que están a 14 días o menos (cada importe se usa una sola vez, así la suma de dos semanas no cuenta nada dos veces). «Gastado», «Semana anterior» y «Donde más» usan lo que queda; las categorías sin gasto neto no aparecen.
+- **Meal prep con desayunos:** `recipe.meal` (`almuerzo` por defecto, también `desayuno`). Referencias propias: `cfg.ref`/`cfg.target` para el almuerzo (7 € y 5 €) y `cfg.refB`/`cfg.targetB` para el desayuno (5 € y 3 €), editables en Ajustes. Hoy muestra una fila por comida con tanda activa y se pueden marcar las dos el mismo día. Las tandas, el ahorro, el resumen semanal y la receta usan la referencia de su tipo. Los datos antiguos siguen siendo almuerzos. La demo incluye una receta de desayuno.
+
+## 2026.11.19.1 · Copias y reglas
+
+- **Copia de seguridad por correo:** una app sin servidor no puede enviar correos sola, así que Más › «Enviar copia por correo» abre el menú de compartir del móvil (`navigator.share` con el archivo `.json` como `text/plain`) y, si el navegador no lo admite, descarga el archivo. Cada copia anota `prefs.bkLast`. Aviso en Hoy (`bkDue()`) cuando pasan los días elegidos (`prefs.bkEvery`: nunca, 14, 30 por defecto o 60) desde `bkLast` o, si no hay, desde `bkSince` (fecha en que se creó o se actualizó la app). «Luego» lo oculta 3 días (`bkSnooze`). Cancelar el menú no cuenta como copia hecha. Sin aviso en modo demo.
+- **Reglas:** buscador por texto o categoría y edición al tocar una regla (texto y categoría, con comprobación de duplicados); al guardar o borrar se reclasifican los movimientos no clasificados a mano.
+
 ## 2026.11.19 · Modo demo
 
 - **Modo demo (Más › Modo demo):** perfil ficticio completo para enseñar la app sin mostrar datos reales. Se activa con `localStorage['mi-dia-mode']='demo'` y la app recarga; usa claves propias (`mi-dia-demo`, `mi-dia-draft-demo`), así que lo real no se lee ni se escribe. Etiqueta "DEMO" en la cabecera; en Más: "Salir de la demo" y "Reiniciar la demo" (borra solo la demo y regenera el perfil). Sin ventana de novedades. En la demo se ocultan la copia de seguridad y "Borrar todo".

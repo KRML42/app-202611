@@ -1,5 +1,5 @@
 // Cambia V en cada versión publicada para que la app avise de la actualización.
-const V='mi-dia-2026.11.19';
+const V='mi-dia-2026.11.21';
 const SHELL=['./','index.html','xlsx.full.min.js','manifest.webmanifest','figtree.woff2','bricolage.woff2','icon-192.png','icon-512.png','icon-maskable-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

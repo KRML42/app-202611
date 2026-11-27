@@ -37,6 +37,7 @@ Hoy (día/semana/mes), tareas, metas de ahorro con sobres, meal prep, quehaceres
 | 6 | Previsión de flujo de caja a 30 días, «libre hasta la nómina» con nómina de fecha variable, mínimo de seguridad en € o %, avisos en Hoy | Hecho (sin subir) |
 | 6c | Mejoras posibles de la previsión: horizonte de 60/90 días, escenarios ("¿y si compro X?"), gastos anuales repartidos, meses con pagas extra | Idea |
 | 6b | Primeros pasos y ayuda: elegir qué módulos usar, ayuda en contexto, guías cortas por tarea con capturas de la demo | Idea anotada |
+| 6d | Cierre de mes en Hoy (idea, esperar al cierre real de noviembre): balance y ahorro frente a mes anterior y media de 3 meses, presupuesto pasado/sobrante, cosas por cerrar; solo si hay algo que contar: nómina vs prevista, fijos que cambian, tarjeta, cuadre de pareja | Idea |
 | 7 | Según necesidad: IndexedDB cuando el espacio lo pida, copias cifradas con contraseña | Pendiente |
 
 ## Fuera de alcance
@@ -49,3 +50,5 @@ Sincronización entre dispositivos, varios usuarios, conexión directa con banco
 - Los datos existentes se conservan y la copia de seguridad se puede restaurar.
 - La app abre sin conexión.
 - Sin errores en consola.
+
+- Hecho (2026.11.22): tarjeta de crédito como cuenta, cuadre mensual con el extracto, bloque de deuda y avisos. Pendiente posible: leer el PDF del extracto para autocompletar el cuadre.

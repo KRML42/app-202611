@@ -251,8 +251,9 @@ function num(x){return String(Math.round(x*10)/10).replace('.',',');}
 /* ---------- Datos ---------- */
 var DEMO=false;try{DEMO=localStorage.getItem('mi-dia-mode')==='demo';}catch(e){}
 var KEY=DEMO?'mi-dia-demo':'mi-dia-v1';
-var APP_VERSION='2026.11.21';
+var APP_VERSION='2026.11.22';
 var CHANGES=[
+  {v:'2026.11.22',items:['Tarjeta de crédito: añádela como cuenta de tipo «Tarjeta» con su límite, TIN y pago mensual. Importa su Excel como el de tus cuentas. El pago desde tu cuenta corriente se empareja solo y no cuenta como gasto: el gasto es cada compra.','En Finanzas › Cuentas ves la deuda, el crédito disponible, lo comprado y pagado este mes, los intereses y cuánto tardarías en liquidarla con tu pago mensual.','Cuadrar con el extracto: indicas el «Total deuda pendiente» y la fecha de corte; la diferencia con tus movimientos se guarda como intereses y comisiones.','Quehaceres: nuevo «Silenciar hasta» al editar uno. No aparece en Hoy ni cuenta como atrasado hasta esa fecha; si lo marcas como hecho, el silencio se quita.','Apuntar un gasto: ahora puedes marcar si es compartido (50 %, otro porcentaje o su parte en euros) al momento. Al importar el extracto, el reparto pasa al movimiento del banco.','Avisos: tarjeta al 80 % del límite o pasada, pago de la tarjeta en los próximos 7 días y extracto sin cuadrar desde hace más de un mes.']},
   {v:'2026.11.21',items:['Fijos (Finanzas › Fijos): la app detecta los cargos que se repiten (suscripciones, alquiler, recibos, tu nómina, traspasos al ahorro) y los propones para confirmar con un toque. También puedes crearlos a mano. Cada fijo se empareja solo con su movimiento del banco y mueve su fecha; si el importe cambia o no llega, te avisa.','Previsión (Finanzas › Previsión): saldo estimado a 30 días con tus fijos y tu gasto variable medio, con un gráfico y la lista de próximos movimientos. La nómina puede llegar en días distintos: se guarda con un margen y la previsión usa el peor caso para avisar.','«Libre hasta la nómina»: cuánto te queda hasta cobrar, apartando tu mínimo de seguridad. Lo ves en Hoy dentro de la tarjeta Dinero.','Mínimo de seguridad: lo defines en euros o en % de tu gasto mensual medio; al escribir uno, la app calcula el otro.','Avisos en Hoy: saldo previsto bajo tu mínimo, presupuesto al 80 % o pasado, cargos de los próximos 7 días, fijos que no llegan y cambios de precio. Cada aviso se puede posponer («Luego») o silenciar.','Nómina con margen «hasta el último día hábil del mes» (sábados y domingos no cuentan) y fijos cada 2 meses, para recibos de agua, luz o gas que no llegan todos los meses.']},
   {v:'2026.11.19.2',items:['Resumen semanal: «Gastado» y «Donde más» usan el balance de cada categoría. Si recibes dinero en una categoría y lo devuelves (o al revés) en los 14 días siguientes o anteriores, se compensan y no aparecen como un gasto grande.','Meal prep con desayunos: cada receta puede ser almuerzo o desayuno. Cada comida compara con su propio precio de comer fuera (almuerzo 7 €, desayuno 5 €, configurables en Ajustes) y en Hoy marcas cada una por separado.']},
   {v:'2026.11.19.1',items:['Copia de seguridad por correo: Más › «Enviar copia por correo» abre el menú de compartir con el archivo adjunto. Hoy te avisa cuando toca (cada mes por defecto; puedes cambiarlo o desactivarlo) y anota la fecha de tu última copia.','Reglas: buscador por texto o categoría, y al tocar una regla puedes cambiar su texto o su categoría (se reclasifican los movimientos).']},
@@ -300,7 +301,7 @@ function demoData(){
   function R(lo,hi){return r2(lo+rnd()*(hi-lo));}
   function pick(a){return a[Math.floor(rnd()*a.length)];}
   var F=newFin(),M=newMeal();
-  F.accounts=[{id:'a1',name:'Cuenta corriente',type:'corriente'},{id:'a2',name:'Cuenta de ahorro',type:'ahorro'}];
+  F.accounts=[{id:'a1',name:'Cuenta corriente',type:'corriente'},{id:'a2',name:'Cuenta de ahorro',type:'ahorro'},{id:'a3',name:'Tarjeta de crédito',type:'tarjeta',limit:1000,tin:19.8,pay:75}];
   F.paired=true;
   var gI={id:uid(),type:'viaje',name:'Viaje a Italia',target:3200,min:2600,due:ymAdd(cm,7),pct:40,note:'Roma y Florencia, una semana',created:d(70),start:addDays(T,250),end:addDays(T,257)};
   var gC={id:uid(),type:'vivienda',name:'Entrada del piso',target:18000,min:0,due:ymAdd(cm,36),pct:40,note:'',created:d(70)};
@@ -334,6 +335,7 @@ function demoData(){
     fx(14,'NETFLIX.COM',CARD,-13.99,'Ocio y cultura','Suscripciones');
     fx(18,'DONACION CRUZ ROJA','RECIBO',-10,'Regalos y donaciones','Donaciones');
     fx(k===0?3:k===1?2:1,'NOMINA ESTUDIO ALBA SL','TRANSFERENCIA RECIBIDA',2180.4,'Ingresos','Nómina');
+    if(last>=5)ev.push({date:dy(5),c:'PAGO TARJETA DE CREDITO',m:'TRANSFERENCIA',a:-75,cat:'',sub:'',acc:'a1',tr:true,to:'a3'});
     if(last>=3)ev.push({date:dy(3),c:'TRASPASO A CUENTA DE AHORRO',m:'TRANSFERENCIA',a:k===0?-600:-550,cat:'',sub:'',acc:'a1',tr:true});
     vr(8,['MERCADONA','CONSUM','BONPREU','CARREFOUR EXPRESS'],14,68,'Alimentación','Supermercado');
     vr(3,['PARADA FRUTAS MARIA'],8,19,'Alimentación','Mercado/fresco');
@@ -368,18 +370,24 @@ function demoData(){
   ev.forEach(function(e,i){e.o=i;});
   ev.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:a.o-b.o;});
   var run=0,mn=0;ev.forEach(function(e){run+=e.a;if(run<mn)mn=run;});
-  var bal={a1:Math.max(900,1631.4-mn),a2:8200},nA={a1:0,a2:0},txns=[],outs=[];
+  var bal={a1:Math.max(900,1631.4-mn),a2:8200},nA={a1:0,a2:0,a3:0},txns=[],outs=[];
   ev.forEach(function(e){
     var t={id:uid(),acc:'a1',k:'demo|a1|'+(nA.a1++),dv:e.date,df:e.date,c:e.c,m:e.m,o:'',a:e.a,b:0,i:0,src:'',cat:e.cat,sub:e.sub,man:false};
     bal.a1=r2(bal.a1+e.a);t.b=bal.a1;
     if(e.sp)t.sp=e.sp;if(e.n)t.n=e.n;if(e.goal){t.goal=e.goal;t.gpart=e.gpart;}
     txns.push(t);
-    if(e.tr){
+    if(e.tr&&e.to==='a3'){
+      var w={id:uid(),acc:'a3',k:'demo|a3|'+(nA.a3++),dv:e.date,df:e.date,c:'ABONO PAGO TARJETA',m:'PAGO',o:'',a:-e.a,b:null,i:0,src:'',cat:'',sub:'',man:false};
+      t.tr=w.id;t.trAcc='a3';w.tr=t.id;w.trAcc='a1';txns.push(w);
+    }else if(e.tr){
       var u={id:uid(),acc:'a2',k:'demo|a2|'+(nA.a2++),dv:e.date,df:e.date,c:'TRASPASO DESDE CUENTA CORRIENTE',m:'TRANSFERENCIA RECIBIDA',o:'',a:-e.a,b:0,i:0,src:'',cat:'',sub:'',man:false};
       bal.a2=r2(bal.a2-e.a);u.b=bal.a2;t.tr=u.id;t.trAcc='a2';u.tr=t.id;u.trAcc='a1';txns.push(u);
     }
   });
-  ['a1','a2'].forEach(function(ac){
+  var cc=[[2,'AMAZON MARKETPLACE',-34.9,'Compras','Electrónica'],[4,'ZARA BARCELONA',-49.95,'Compras','Ropa y calzado'],[9,'CINESA DIAGONAL',-19.5,'Ocio y cultura','Cine y eventos'],[13,'RESTAURANT CAL PEP',-62.4,'Restauración','Restaurantes'],[18,'FARMACIA CENTRAL',-17.3,'Salud','Farmacia'],[24,'DECATHLON',-58.8,'Cuidado personal','Gimnasio y deporte']];
+  cc.forEach(function(x){var dd=d(x[0]+3);txns.push({id:uid(),acc:'a3',k:'demo|a3|'+(nA.a3++),dv:dd,df:dd,c:x[1],m:'COMPRA',o:'',a:x[2],b:null,i:0,src:'',cat:x[3],sub:x[4],man:false});});
+  F.accounts[2].anchor={date:d(40),debt:612.35};
+  ['a1','a2','a3'].forEach(function(ac){
     var l=txns.filter(function(t){return t.acc===ac;}),mx=l.length?l[l.length-1].df:'';
     l.forEach(function(t,ix){t.i=l.length-1-ix;t.src=mx;});
   });
@@ -497,7 +505,7 @@ function normalize(o){
   if(!o.meal)o.meal=newMeal();
   ['stores','ings','recipes','batches','logs'].forEach(function(k){o.meal[k]=o.meal[k]||[];});o.meal.cfg=o.meal.cfg||{ref:7,target:5,mode:'min'};
   if(!o.fin)o.fin=newFin();
-  o.fin.accounts=o.fin.accounts||[];o.fin.txns=o.fin.txns||[];o.fin.rules=o.fin.rules||defaultRules();o.fin.cats=o.fin.cats||defaultCats();o.fin.contacts=o.fin.contacts||{};o.fin.budgets=o.fin.budgets||{};o.fin.shares=o.fin.shares||[];o.fin.goals=o.fin.goals||[];o.fin.pend=o.fin.pend||[];o.prefs=o.prefs||{reviewDay:1};if(!o.prefs.bkSince)o.prefs.bkSince=todayStr();o.fin.alloc=o.fin.alloc||[];o.fin.recur=o.fin.recur||[];o.fin.recurNo=o.fin.recurNo||[];o.fin.alertOff=o.fin.alertOff||{};o.fin.safe=o.fin.safe||{eur:0,pct:0,src:'eur'};if(o.fin.goalStart==null)o.fin.goalStart='';if(o.fin.allocDone==null)o.fin.allocDone='';if(o.fin.shareFrom==null)o.fin.shareFrom='';
+  o.fin.accounts=o.fin.accounts||[];o.fin.txns=o.fin.txns||[];o.fin.rules=o.fin.rules||defaultRules();o.fin.cats=o.fin.cats||defaultCats();o.fin.contacts=o.fin.contacts||{};o.fin.budgets=o.fin.budgets||{};o.fin.shares=o.fin.shares||[];o.fin.goals=o.fin.goals||[];o.fin.pend=o.fin.pend||[];o.prefs=o.prefs||{reviewDay:1};if(!o.prefs.bkSince)o.prefs.bkSince=todayStr();o.fin.alloc=o.fin.alloc||[];(o.fin.cats||[]).forEach(function(c){if(c.name==='Finanzas'&&c.subs&&!c.subs.some(function(s){return s.n==='Intereses';}))c.subs.push({n:'Intereses',t:'variable'});});o.fin.recur=o.fin.recur||[];o.fin.recurNo=o.fin.recurNo||[];o.fin.alertOff=o.fin.alertOff||{};o.fin.safe=o.fin.safe||{eur:0,pct:0,src:'eur'};if(o.fin.goalStart==null)o.fin.goalStart='';if(o.fin.allocDone==null)o.fin.allocDone='';if(o.fin.shareFrom==null)o.fin.shareFrom='';
   if(!o.fin.cats.some(function(c){return c.kind==='pareja';}))o.fin.cats.push({name:'Pareja',kind:'pareja',subs:[{n:'Aportación',t:'variable'}]});
   o.fin.cats.forEach(function(c){if(c.kind==='ahorro'&&c.name==='Ahorro e inversión'&&!c.subs.some(function(x){return x.n==='Traspaso';}))c.subs.push({n:'Traspaso',t:'variable'});});
   if(!o.fin.paired){o.fin.paired=true;o.__pair=true;}
@@ -563,6 +571,7 @@ function quitStats(h){
   return {cur:cur,best:best,count:slips.length};
 }
 function choreInfo(c){
+  if(c.snooze&&c.snooze>todayStr())return {days:100000+diff(c.snooze,todayStr()),state:'snoozed',label:'Silenciado hasta '+fmtShort(c.snooze)};
   if(!c.last)return {days:0,state:'today',label:'Sin registrar'};
   var d=diff(addDays(c.last,c.every),todayStr());
   if(d<0)return {days:d,state:'late',label:'Atrasada '+(-d)+' d'};
@@ -644,7 +653,7 @@ function defaultCats(){
     {name:'Ocio y cultura',kind:'gasto',subs:[s('Suscripciones','fijo'),s('Videojuegos'),s('Cine y eventos'),s('Hobbies')]},
     {name:'Viajes',kind:'gasto',subs:[s('Transporte','nomensual'),s('Alojamiento','nomensual'),s('Actividades','nomensual')]},
     {name:'Formación y trabajo',kind:'gasto',subs:[s('Cursos'),s('Libros'),s('Cuotas profesionales','nomensual')]},
-    {name:'Finanzas',kind:'gasto',subs:[s('Comisiones'),s('Impuestos','nomensual'),s('Préstamos','fijo')]},
+    {name:'Finanzas',kind:'gasto',subs:[s('Comisiones'),s('Intereses'),s('Impuestos','nomensual'),s('Préstamos','fijo')]},
     {name:'Regalos y donaciones',kind:'gasto',subs:[s('Familia'),s('Donaciones')]},
     {name:'Ahorro e inversión',kind:'ahorro',subs:[s('Fondo de emergencia'),s('Metas'),s('Inversión'),s('Redondeo'),s('Traspaso')]},
     {name:'Ingresos',kind:'ingreso',subs:[s('Nómina'),s('Extras'),s('Reembolsos'),s('Otros')]},
@@ -721,11 +730,14 @@ function openQuickSheet(p){
   p=p||{a:0,date:todayStr(),acc:accs[0]?accs[0].id:'',cat:'',sub:'',n:''};
   var fq=freqCats(),all=catOptions(false);
   var opts=[{v:'',t:'Sin categoría (la pones al conciliar)'}].concat(fq.map(function(k){var pp=k.split('||');return {v:k,t:'★ '+pp[0]+(pp[1]?' › '+pp[1]:'')};})).concat(all);
-  openSheet({title:isNew?'Apuntar un gasto':'Gasto apuntado',values:{amt:p.a?String(Math.abs(p.a)).replace('.',','):'',kind:p.a>0?'in':'out',cat:p.cat?p.cat+'||'+(p.sub||''):'',n:p.n||'',date:p.date,acc:p.acc},
+  openSheet({title:isNew?'Apuntar un gasto':'Gasto apuntado',values:{amt:p.a?String(Math.abs(p.a)).replace('.',','):'',kind:p.a>0?'in':'out',cat:p.cat?p.cat+'||'+(p.sub||''):'',n:p.n||'',date:p.date,acc:p.acc,share:shToSel(p.sh).s,sv:shToSel(p.sh).v},
     note:'Cuenta ya en tus presupuestos. Al importar el extracto se une con el movimiento real (mismo importe y fecha cercana) y este le pasa la categoría y la nota.',
     fieldsFn:function(v){var f=[{id:'amt',label:'Importe (€)',value:v.amt,inputmode:'decimal',required:true},
-      {id:'cat',label:'Categoría',type:'select',value:v.cat,options:opts},{id:'n',label:'Qué fue (nota)',value:v.n,placeholder:'Por ejemplo: cena con amigos'},
-      {id:'date',label:'Fecha',type:'date',value:v.date},{id:'kind',label:'Tipo',type:'select',value:v.kind,options:[{v:'out',t:'Gasto'},{v:'in',t:'Ingreso o devolución'}]}];
+      {id:'cat',label:'Categoría',type:'select',value:v.cat,re:true,options:opts},{id:'n',label:'Qué fue (nota)',value:v.n,placeholder:'Por ejemplo: cena con amigos'},
+      {id:'date',label:'Fecha',type:'date',value:v.date},{id:'kind',label:'Tipo',type:'select',value:v.kind,re:true,options:[{v:'out',t:'Gasto'},{v:'in',t:'Ingreso o devolución'}]}];
+      if(v.kind!=='in'){var sp0=v.cat?splitCat(v.cat):['',''],sc=sp0[0]?catOf(sp0[0]):null;
+        if(!sc||sc.kind==='gasto'){f.push({id:'share',label:'¿Compartido?',type:'select',value:v.share||'',re:true,options:shareOpts(sp0[0]?shareRuleFor(sp0[0],sp0[1],(v.date||todayStr()).slice(0,7)):null)});
+          if(v.share==='pct'||v.share==='amt')f.push({id:'sv',label:v.share==='pct'?'Su parte (%)':'Su parte (€)',value:v.sv,inputmode:'decimal'});}}
       if(accs.length>1)f.push({id:'acc',label:'Cuenta',type:'select',value:v.acc,options:accs.map(function(a){return {v:a.id,t:a.name};})});
       return f;},
     onSave:function(v){
@@ -734,6 +746,7 @@ function openQuickSheet(p){
       var cp=v.cat?splitCat(v.cat):['',''];
       var o=isNew?{id:uid(),created:todayStr()}:p;
       o.a=v.kind==='in'?r2(a):-r2(a);o.cat=cp[0];o.sub=cp[1];o.n=String(v.n||'').trim();o.date=v.date||todayStr();o.acc=v.acc||(accs[0]?accs[0].id:S.fin.accounts[0].id);
+      if(v.kind==='in'||v.share==null)delete o.sh;else{var sh=selToSh(v.share,v.sv);if(sh===undefined)return 'Escribe su parte (un número mayor que 0).';if(sh)o.sh=sh;else delete o.sh;}
       if(isNew){S.fin.pend.push(o);ui.msg='Apuntado: '+money(o.a)+(o.n?' · '+o.n:'')+'.';}
     },
     onDelete:isNew?null:function(){S.fin.pend=S.fin.pend.filter(function(x){return x!==p;});}});
@@ -864,6 +877,7 @@ function catOptions(withEmpty){
   return o;
 }
 function accBalance(a){
+  if(a.type==='tarjeta'){var cd=cardDebt(a);return cd?{b:-cd.debt,date:cd.date}:null;}
   var best=null;
   S.fin.txns.forEach(function(t){
     if(t.acc!==a.id||t.b==null)return;
@@ -1330,7 +1344,7 @@ function viewFinResumen(unc){
   if(!F.txns.length)return '<p class="empty" style="margin-top:12px">Aún no hay movimientos. Importa el archivo de tu banco en la pestaña Cuentas.</p><button class="btn primary block" data-act="ftab" data-t="cuentas">Importar movimientos</button>';
   var out='';
   var tot=0;
-  var accs=F.accounts.map(function(a){var b=accBalance(a);if(b)tot+=b.b;return '<li class="row"><span class="rowmain"><span class="t">'+esc(a.name)+'</span><span class="sub">'+(a.type==='ahorro'?'Ahorro':'Corriente')+(b?' · a '+fmtShort(b.date):'')+'</span></span><span class="amt">'+(b?money(b.b):'—')+'</span></li>';}).join('');
+  var accs=F.accounts.map(function(a){var b=accBalance(a);if(b)tot+=b.b;return '<li class="row"><span class="rowmain"><span class="t">'+esc(a.name)+'</span><span class="sub">'+accTypeName(a.type)+(b?' · a '+fmtShort(b.date):'')+'</span></span><span class="amt">'+(b?money(b.b):'—')+'</span></li>';}).join('');
   out+='<section class="sect"><h2>Saldos</h2><ul class="rows">'+accs+(F.accounts.length>1?'<li class="row"><span class="rowmain"><span class="t"><b>Total</b></span></span><span class="amt"><b>'+money(tot)+'</b></span></li>':'')+'</ul></section>';
   out+=monthBar();
   var ym=ui.fmonth,ing=0,gas=0,aho=0,sin=0,sinN=0,herM=0,recM=0,byCat={},byInc={},byTipo={fijo:0,variable:0,nomensual:0};
@@ -1514,7 +1528,8 @@ function recDetect(){
     var rec3=L.slice(-3).map(function(t){return Math.abs(t.a);}),amt=r2(vr?med:median(rec3));
     var days=ds.map(function(d){return +d.slice(8,10);}),bd=(freq==='mes'||freq==='bim')&&days.some(function(d){return d<=8;})&&days.some(function(d){return d>=24;});
     var offs=bd?ds.map(dayOff):days,off=Math.round(median(offs)),win=Math.min(10,Math.max.apply(null,offs.map(function(o){return Math.abs(o-off);})));
-    var r={id:uid(),name:tr?'Traspaso a ahorro':niceName((last.c||'').replace(/^recibo\s+/i,'')),a:neg?-amt:amt,freq:freq,off:off,bd:bd,win:(freq==='mes'||freq==='bim')?win:0,lastBiz:!neg&&freq==='mes'&&!bd&&median(days)>=25,vr:vr,tr:tr,key:key,gk:g,
+    var tc=tr&&last.trAcc?accType(last.trAcc):'';
+    var r={id:uid(),name:tr?(tc==='tarjeta'?'Pago de la tarjeta':'Traspaso a ahorro'):niceName((last.c||'').replace(/^recibo\s+/i,'')),a:neg?-amt:amt,freq:freq,off:off,bd:bd,win:(freq==='mes'||freq==='bim')?win:0,lastBiz:!neg&&freq==='mes'&&!bd&&median(days)>=25,vr:vr,tr:tr,card:tc==='tarjeta',key:key,gk:g,
       cat:cl?cl.cat:'',sub:cl?cl.sub:'',start:'',since:'',stop:false,n:L.length};
     if(!neg&&!r.cat){r.cat='Ingresos';r.sub='Otros';}
     r.start=recStep(r,last.dv);
@@ -1580,7 +1595,7 @@ function forecast(n,late){
         else if(e<T)d=r.a<0?T:null;
         else if(late&&r.a>0)d=recLateDate(r,e);
       }else if(late&&r.a>0)d=recLateDate(r,e);
-      if(d&&d<=end)ev.push({d:d,rid:r.id,name:r.name,a:r.a,inc:r.a>0,tr:!!r.tr});
+      if(d&&d<=end)ev.push({d:d,rid:r.id,name:r.name,a:r.a,inc:r.a>0,tr:!!r.tr,card:!!r.card});
       e=recStep(r,e);first=false;k++;
     }
   });
@@ -1641,10 +1656,20 @@ function finAlerts(){
   });
   var fc0=forecast(30,false);
   if(fc0){
-    var soon=fc0.ev.filter(function(x){return x.a<0&&!x.tr&&x.d<=addDays(T,7);});
+    var soon=fc0.ev.filter(function(x){return x.a<0&&(!x.tr||x.card)&&x.d<=addDays(T,7);});
     if(soon.length){var tot=0;soon.forEach(function(x){tot+=-x.a;});
       push({key:'due|'+soon[0].d+'|'+soon.length,sev:0,t:'prev',btn:'Ver',text:'Próximos 7 días: '+soon.slice(0,3).map(function(x){return x.name+' '+money(-x.a)+' ('+dd(x.d)+')';}).join(', ')+(soon.length>3?' y '+(soon.length-3)+' más':'')+'. Total '+money(tot)+'.'});}
   }
+  cards().forEach(function(a){
+    var n=S.fin.txns.filter(function(t){return t.acc===a.id;}).length;if(!n)return;
+    var ci=cardInfo(a);
+    if(!ci.cd){push({key:'card0|'+a.id,sev:1,act:'card-cuadre',rid:a.id,btn:'Indicar deuda',text:'Indica la deuda actual de '+a.name+' para llevar su saldo y el crédito disponible.'});return;}
+    if(ci.lim){
+      if(ci.cd.debt>ci.lim)push({key:'card|over|'+a.id+'|'+ym,sev:3,t:'cuentas',btn:'Ver',text:'Has superado el límite de '+a.name+' ('+money(ci.cd.debt)+' de '+money(ci.lim)+'): el banco puede cobrar comisión.'});
+      else if(ci.use>=0.8)push({key:'card|80|'+a.id+'|'+ym,sev:2,t:'cuentas',btn:'Ver',text:a.name+': has usado el '+Math.round(ci.use*100)+' % del límite; te quedan '+money(ci.avail)+'.'});
+    }
+    if(a.anchor&&diff(T,a.anchor.date)>35&&S.fin.txns.some(function(t){return t.acc===a.id&&t.dv>a.anchor.date;}))push({key:'cuadre|'+a.id+'|'+ym,sev:0,act:'card-cuadre',rid:a.id,btn:'Cuadrar',text:'Hace '+diff(T,a.anchor.date)+' días que no cuadras '+a.name+' con el extracto.'});
+  });
   var sg=recDetect();
   if(sg.length)push({key:'sug|'+ym,sev:0,t:'fijos',btn:'Revisar',text:'He encontrado '+sg.length+(sg.length===1?' cargo que se repite':' cargos que se repiten')+'. Confírmalos en Fijos para mejorar la previsión.'});
   return out.sort(function(a,b){return b.sev-a.sev;});
@@ -1724,7 +1749,7 @@ function viewFinPrev(){
 function viewFinFijos(){
   var F=S.fin,out='<p class="note" style="margin-top:10px">Cargos e ingresos que se repiten. La app empareja cada uno con su movimiento real y mueve la fecha sola.</p>';
   var inc=0,exp=0,sav=0;
-  F.recur.forEach(function(r){if(r.stop)return;var m=recMonthly(r);if(r.tr)sav+=m;else if(r.a>0)inc+=m;else exp+=m;});
+  F.recur.forEach(function(r){if(r.stop)return;var m=recMonthly(r);if(r.tr&&!r.card)sav+=m;else if(r.a>0)inc+=m;else exp+=m;});
   out+='<div class="tiles"><div class="tile"><span>Fijos al mes</span><b>'+money(exp)+'</b></div><div class="tile"><span>Fijos al año</span><b>'+money(exp*12)+'</b></div><div class="tile"><span>Ingresos fijos al mes</span><b>'+money(inc)+'</b></div><div class="tile"><span>Ahorro programado al mes</span><b>'+money(sav)+'</b></div></div>';
   var sg=recDetect();
   if(sg.length){
@@ -1805,6 +1830,100 @@ function openSafeSheet(){
       if(src==='pct'&&!(base>0))src='eur';
       if(src==='pct')S.fin.safe={eur:0,pct:Math.max(0,p),src:'pct'};
       else S.fin.safe={eur:Math.max(0,r2(e)),pct:0,src:'eur'};
+    }});
+}
+/* ===== Tarjeta de crédito ===== */
+function accTypeName(t){return t==='ahorro'?'Ahorro':t==='tarjeta'?'Tarjeta de crédito':'Corriente';}
+function cards(){return S.fin.accounts.filter(function(a){return a.type==='tarjeta';});}
+function cardDebt(a){
+  if(!a||a.type!=='tarjeta'||!a.anchor||a.anchor.debt==null)return null;
+  var d=a.anchor.debt,last=a.anchor.date;
+  S.fin.txns.forEach(function(t){if(t.acc!==a.id||t.dv<=a.anchor.date)return;d-=t.a;if(t.dv>last)last=t.dv;});
+  return {debt:r2(d),date:last,anchor:a.anchor.date};
+}
+function cardExpectedAt(a,date){
+  if(!a.anchor||a.anchor.debt==null)return null;
+  var d=a.anchor.debt;
+  S.fin.txns.forEach(function(t){if(t.acc===a.id&&t.dv>a.anchor.date&&t.dv<=date)d-=t.a;});
+  return r2(d);
+}
+function cardPay(a){
+  if(a.pay>0)return a.pay;
+  var r=S.fin.recur.filter(function(x){return x.card&&!x.stop;})[0];
+  return r?Math.abs(r.a):0;
+}
+function cardPayoff(debt,tin,pay){
+  if(!(debt>0))return {n:0,int:0};
+  if(!(pay>0))return null;
+  var r=(tin||0)/1200,n=0,I=0,B=debt;
+  if(r>0&&pay<=B*r+0.005)return {stuck:true,int:r2(B*r)};
+  while(B>0.005&&n<240){var i=B*r;I+=i;B=B+i-pay;n++;}
+  return {n:n,int:r2(I)};
+}
+function cardInfo(a){
+  var cd=cardDebt(a);if(!cd)return {cd:null};
+  var lim=a.limit>0?a.limit:0,tin=a.tin>0?a.tin:0,ym=todayStr().slice(0,7),buy=0,paid=0,interest=0,from=addDays(todayStr(),-365);
+  S.fin.txns.forEach(function(t){
+    if(t.acc!==a.id)return;
+    if(t.adj==='int'&&t.dv>=from)interest+=-t.a;
+    if(t.dv.slice(0,7)!==ym||t.adj)return;
+    if(t.a<0)buy+=-t.a;else paid+=t.a;
+  });
+  var pay=cardPay(a);
+  return {cd:cd,lim:lim,tin:tin,avail:lim?r2(lim-cd.debt):null,use:lim?cd.debt/lim:null,buy:r2(buy),paid:r2(paid),interest:r2(interest),estInt:tin?r2(Math.max(0,cd.debt)*tin/1200):0,pay:pay,payoff:cardPayoff(cd.debt,tin,pay)};
+}
+function cardSection(a){
+  var ci=cardInfo(a),out='<section class="sect"><h2>'+esc(a.name)+'</h2>';
+  if(!ci.cd){
+    return out+'<p class="note">Para llevar la deuda, indica cuánto debes según tu último extracto («Total deuda pendiente de pago») y su fecha de corte. Después importa los movimientos posteriores.</p><button class="btn primary block" style="margin-top:8px" data-act="card-cuadre" data-id="'+a.id+'">Indicar deuda actual</button><button class="btn block" style="margin-top:8px" data-act="acc-edit" data-id="'+a.id+'">Editar tarjeta</button></section>';
+  }
+  var tiles='<div class="tile"><span>Deuda actual</span><b>'+money(ci.cd.debt)+'</b></div>';
+  if(ci.avail!=null)tiles+='<div class="tile"><span>Crédito disponible</span><b class="'+(ci.avail<0?'over-t':ci.use>=0.8?'warn-t':'')+'">'+money(ci.avail)+'</b><span>'+Math.round(ci.use*100)+' % del límite</span></div>';
+  tiles+='<div class="tile"><span>Compras este mes</span><b>'+money(ci.buy)+'</b></div><div class="tile"><span>Pagado este mes</span><b>'+money(ci.paid)+'</b></div>';
+  if(ci.tin)tiles+='<div class="tile"><span>Intereses al mes (aprox.)</span><b>'+money(ci.estInt)+'</b></div>';
+  tiles+='<div class="tile"><span>Intereses y comisiones, 12 meses</span><b>'+money(ci.interest)+'</b></div>';
+  out+='<div class="tiles">'+tiles+'</div>';
+  var po=ci.payoff;
+  if(ci.pay>0&&po){
+    if(po.stuck)out+='<p class="note warnt">Con '+money(ci.pay)+' al mes no cubres los intereses (≈ '+money(po.int)+'): la deuda no baja.</p>';
+    else if(po.n>0)out+='<p class="note">Pagando '+money(ci.pay)+' al mes'+(ci.tin?' con un TIN del '+num(ci.tin)+' %':'')+', la deuda actual se liquida en unos '+po.n+' meses'+(ci.tin?' y pagarías ≈ '+money(po.int)+' de intereses':'')+', si no compras más con la tarjeta.</p>';
+  }else if(!(ci.pay>0))out+='<p class="note">Indica tu pago mensual en «Editar tarjeta» para estimar cuándo la liquidas.</p>';
+  out+='<p class="note" style="margin-top:6px">Deuda a '+fmtShort(ci.cd.date)+' según tus movimientos'+(a.anchor?' desde el último cuadre ('+fmtShort(a.anchor.date)+')':'')+'.</p>';
+  out+='<div style="display:grid;gap:8px;margin-top:8px"><button class="btn primary block" data-act="card-cuadre" data-id="'+a.id+'">Cuadrar con el extracto</button><button class="btn block" data-act="acc-edit" data-id="'+a.id+'">Editar tarjeta</button></div>';
+  return out+'</section>';
+}
+function openCuadreSheet(a){
+  if(!a)return;
+  var T=todayStr(),pe=ymdOf(ymAdd(T.slice(0,7),-1),31);
+  if(a.anchor&&pe<=a.anchor.date)pe=T;
+  var first=!a.anchor,warned=false;
+  function info(v){
+    if(first)return 'Es la primera vez: este dato será el punto de partida. No se registra ningún ajuste.';
+    if(!v.date||v.date<=a.anchor.date)return 'La fecha de corte debe ser posterior al último cuadre ('+fmtShort(a.anchor.date)+').';
+    var ex=cardExpectedAt(a,v.date),real=num2(v.debt);
+    if(real==null)return 'Con tus movimientos, la deuda debería ser '+money(ex)+'.';
+    var d=r2(real-ex),est=a.tin>0?r2(Math.max(0,ex)*a.tin/1200):0;
+    if(d>0.005)return 'Esperaba '+money(ex)+'. Diferencia de '+money(d)+(est?' (intereses esperados ≈ '+money(est)+')':'')+': se registrará como intereses y comisiones.';
+    if(d<-0.005)return 'Esperaba '+money(ex)+'. El banco indica '+money(-d)+' menos: puede faltar algún pago o abono sin importar. Se ajusta el saldo.';
+    return 'Esperaba '+money(ex)+'. Cuadra exactamente.';
+  }
+  openSheet({title:'Cuadrar '+a.name,values:{date:pe,debt:''},
+    note:first?'Usa el «Total deuda pendiente de pago» de tu último extracto y su fecha de corte.':'Escribe el «Total deuda pendiente de pago» del extracto y su fecha de corte.',
+    fieldsFn:function(v){return [{id:'date',label:'Fecha de corte del extracto',type:'date',value:v.date,required:true},{id:'debt',label:'Total deuda pendiente (€)',value:v.debt,inputmode:'decimal',required:true},{type:'info',id:'ci',text:info(v)}];},
+    live:{id:'ci',fn:info},
+    onSave:function(v){
+      var real=num2(v.debt);
+      if(!v.date)return 'Indica la fecha de corte.';
+      if(!(real>=0))return 'Escribe la deuda pendiente.';
+      if(!first){
+        if(v.date<=a.anchor.date)return 'La fecha de corte debe ser posterior al último cuadre ('+fmtShort(a.anchor.date)+').';
+        var ex=cardExpectedAt(a,v.date),d=r2(real-ex),est=a.tin>0?Math.max(0,ex)*a.tin/1200:0;
+        if(d>0.005&&!warned&&d>2*est+5){warned=true;return 'La diferencia ('+money(d)+') es mucho mayor que los intereses esperados ('+money(est)+'). Puede que falten movimientos de este periodo: impórtalos antes. Si es correcto, pulsa Guardar otra vez.';}
+        if(d>0.005){S.fin.txns.push({id:uid(),acc:a.id,k:'adj|'+a.id+'|'+v.date,dv:v.date,df:v.date,c:'INTERESES Y COMISIONES (EXTRACTO)',m:'AJUSTE',o:'',a:-d,b:null,i:-1,src:'',cat:'Finanzas',sub:'Intereses',man:true,adj:'int'});ui.msg='Tarjeta cuadrada. Intereses y comisiones registrados: '+money(d)+'.';}
+        else if(d<-0.005)ui.msg='Tarjeta cuadrada. El banco indica '+money(-d)+' menos que tus movimientos: revisa si falta algún pago.';
+        else ui.msg='Tarjeta cuadrada: coincide con el extracto.';
+      }else ui.msg='Deuda inicial guardada: '+money(real)+'.';
+      a.anchor={date:v.date,debt:r2(real)};
     }});
 }
 function viewFinPres(){
@@ -1937,8 +2056,9 @@ function viewFinCuentas(){
   });
   out+='</section><section class="sect"><h2>Cuentas</h2>';
   out+=F.accounts.length?'<ul class="rows">'+F.accounts.map(function(a){var b=accBalance(a),n=F.txns.filter(function(t){return t.acc===a.id;}).length;
-    return '<li class="row"><button class="rowmain" data-act="acc-edit" data-id="'+a.id+'"><span class="t">'+esc(a.name)+'</span><span class="sub">'+(a.type==='ahorro'?'Ahorro':'Corriente')+' · '+n+' movimientos'+(b?' · saldo '+money(b.b):'')+'</span></button></li>';}).join('')+'</ul>':'<p class="empty">Aún no hay cuentas.</p>';
+    return '<li class="row"><button class="rowmain" data-act="acc-edit" data-id="'+a.id+'"><span class="t">'+esc(a.name)+'</span><span class="sub">'+accTypeName(a.type)+' · '+n+' movimientos'+(b?' · saldo '+money(b.b):'')+'</span></button></li>';}).join('')+'</ul>':'<p class="empty">Aún no hay cuentas.</p>';
   out+='<button class="btn block" data-act="acc-new">Añadir cuenta</button></section>';
+  out+=cards().map(cardSection).join('');
   var ndup=dupGroups().length;
   out+='<section class="sect"><h2>Duplicados</h2><p class="note">'+(ndup?ndup+(ndup===1?' posible duplicado':' posibles duplicados')+' por revisar.':'No hay posibles duplicados.')+'</p>'+(ndup?'<button class="btn block" data-act="ftab" data-t="dups">Revisar duplicados</button>':'')+'</section>';
   var npair=F.txns.filter(function(t){return t.tr&&t.a<0;}).length;
@@ -2085,10 +2205,22 @@ function openContactSheet(ph){
 }
 function openAccSheet(a){
   var isNew=!a;
-  openSheet({title:isNew?'Nueva cuenta':'Editar cuenta',values:{name:a?a.name:'',type:a?a.type:'corriente'},
+  openSheet({title:isNew?'Nueva cuenta':'Editar cuenta',values:{name:a?a.name:'',type:a?a.type:'corriente',limit:a&&a.limit?String(a.limit).replace('.',','):'',tin:a&&a.tin?String(a.tin).replace('.',','):'',pay:a&&a.pay?String(a.pay).replace('.',','):''},
     note:isNew?'':'Eliminar la cuenta borra también sus movimientos.',
-    fieldsFn:function(v){return [{id:'name',label:'Nombre',value:v.name,required:true},{id:'type',label:'Tipo',type:'select',value:v.type,options:[{v:'corriente',t:'Corriente'},{v:'ahorro',t:'Ahorro'}]}];},
-    onSave:function(v){var o=a||{id:uid()};o.name=v.name.trim();o.type=v.type;if(isNew){S.fin.accounts.push(o);ui.impAcc=o.id;}pairTransfers();},
+    fieldsFn:function(v){
+      var f=[{id:'name',label:'Nombre',value:v.name,required:true},{id:'type',label:'Tipo',type:'select',value:v.type,re:true,options:[{v:'corriente',t:'Corriente'},{v:'ahorro',t:'Ahorro'},{v:'tarjeta',t:'Tarjeta de crédito'}]}];
+      if(v.type==='tarjeta'){
+        f.push({id:'limit',label:'Límite de crédito (€)',value:v.limit,inputmode:'decimal'});
+        f.push({id:'tin',label:'TIN anual (%, opcional)',value:v.tin,inputmode:'decimal',placeholder:'Ej.: 19,8'});
+        f.push({id:'pay',label:'Pago mensual fijo (€, opcional)',value:v.pay,inputmode:'decimal'});
+        f.push({type:'info',id:'ti',text:'Importa su Excel y, después, indica la deuda de tu último extracto. Los pagos desde tu cuenta corriente se emparejan solos y no cuentan como gasto: el gasto es cada compra.'});
+      }
+      return f;},
+    onSave:function(v){
+      var o=a||{id:uid()};o.name=v.name.trim();o.type=v.type;
+      if(v.type==='tarjeta'){o.limit=Math.max(0,num2(v.limit)||0);o.tin=Math.max(0,num2(v.tin)||0);o.pay=Math.max(0,num2(v.pay)||0);}
+      else{delete o.limit;delete o.tin;delete o.pay;delete o.anchor;}
+      if(isNew){S.fin.accounts.push(o);ui.impAcc=o.id;}pairTransfers();},
     onDelete:isNew?null:function(){S.fin.txns=S.fin.txns.filter(function(t){return t.acc!==a.id;});S.fin.txns.forEach(function(t){if(t.trAcc===a.id){delete t.tr;delete t.trAcc;}});S.fin.accounts=S.fin.accounts.filter(function(x){return x!==a;});ui.impAcc='';}});
 }
 var TIPOS=[{v:'fijo',t:'Fijo'},{v:'variable',t:'Variable'},{v:'nomensual',t:'No mensual'}];
@@ -2865,7 +2997,7 @@ function openTaskSheet(t){
 function openChoreSheet(c){
   var isNew=!c;
   var cur=c||{title:'',area:'',every:7,last:''};
-  openSheet({title:isNew?'Nuevo quehacer':'Editar quehacer',values:{title:cur.title,area:cur.area||'',every:cur.every,last:''},
+  openSheet({title:isNew?'Nuevo quehacer':'Editar quehacer',values:{title:cur.title,area:cur.area||'',every:cur.every,last:'',snooze:cur.snooze&&cur.snooze>todayStr()?cur.snooze:''},
     note:isNew?'Si indicas la última vez, la app calcula cuándo toca de nuevo.':'',
     fieldsFn:function(v){
       var f=[{id:'title',label:'Quehacer',value:v.title,required:true},{id:'area',label:'Zona (opcional)',value:v.area},
@@ -2877,10 +3009,14 @@ function openChoreSheet(c){
         f.push({id:'add',label:'Añadir un día en que se hizo',type:'date',value:v.add||''});
         if(hh.length)f.push({id:'rm',label:'Quitar un día registrado por error',type:'select',value:v.rm||'',options:[{v:'',t:'Ninguno'}].concat(hh.slice(0,30).map(function(d){return {v:d,t:fmtShort(d)};}))});
       }
+      f.push({id:'snooze',label:'Silenciar hasta (opcional)',type:'date',value:v.snooze||''});
+      f.push({type:'info',id:'sn',text:'Mientras esté silenciado no aparece en Hoy ni cuenta como atrasado. Al llegar esa fecha vuelve a avisar.'});
       return f;
     },
     onSave:function(v){
       var o=c||{id:uid(),hist:[],last:null};o.title=v.title.trim();o.area=v.area.trim();o.every=Math.max(1,parseInt(v.every,10)||1);
+      if(v.snooze&&v.snooze<=todayStr())return 'Elige una fecha futura para silenciar, o déjalo vacío.';
+      if(v.snooze)o.snooze=v.snooze;else delete o.snooze;
       if(!isNew&&(v.add||v.rm)){if(v.add&&diff(v.add,todayStr())>0)return 'No puedes registrar un día futuro.';setChoreHist(o,function(h){if(v.add&&h.indexOf(v.add)<0)h.push(v.add);if(v.rm){var k=h.indexOf(v.rm);if(k>=0)h.splice(k,1);}});}
       if(isNew){if(v.last){o.hist=[v.last];o.last=v.last;}S.chores.push(o);}
     },
@@ -3001,7 +3137,7 @@ function act(a,ds){
     case 'h-unslip':setLog(ds.id,T,0);break;
     case 'h-edit':openHabitSheet(find(S.habits,ds.id));return;
     case 'h-new':openHabitSheet(null);return;
-    case 'chore-done':var c=find(S.chores,ds.id);if(c){setChoreHist(c,function(h){if(h.indexOf(T)<0)h.push(T);});ui.msg=c.title+': hecho. Próxima vez '+relDay(addDays(T,c.every))+'.';}break;
+    case 'chore-done':var c=find(S.chores,ds.id);if(c){delete c.snooze;setChoreHist(c,function(h){if(h.indexOf(T)<0)h.push(T);});ui.msg=c.title+': hecho. Próxima vez '+relDay(addDays(T,c.every))+'.';}break;
     case 'chore-undo':var cu=find(S.chores,ds.id);if(cu)setChoreHist(cu,function(h){var k=h.indexOf(T);if(k>=0)h.splice(k,1);});break;
     case 'chore-edit':openChoreSheet(find(S.chores,ds.id));return;
     case 'chore-new':openChoreSheet(null);return;
@@ -3071,6 +3207,7 @@ function act(a,ds){
     case 'clear-done':var L2=find(S.lists,ds.id);if(L2){L2.items=L2.items.filter(function(i){return !i.done;});save();}break;
     case 'ftab':ui.tab='fin';ui.ftab=ds.t;ui.fday='';ui.fhl='';ui.fcat=null;ui.fall=false;ui.sel=null;break;
     case 'qsort':ui.qsort=ds.s;break;
+    case 'card-cuadre':openCuadreSheet(find(S.fin.accounts,ds.id)||cards()[0]);return;
     case 'recur-new':openRecurSheet(null);return;
     case 'recur-edit':openRecurSheet(find(S.fin.recur,ds.id));return;
     case 'recur-add':var rd=recDetect().filter(function(x){return x.gk===ds.id;})[0];if(rd){S.fin.recur.push(rd);ui.msg='Añadido a fijos: '+rd.name+'.';save();}break;

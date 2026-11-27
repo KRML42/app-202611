@@ -2,6 +2,15 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.22 · Tarjeta de crédito (fase 7)
+
+- **Cuenta tipo `tarjeta`:** `limit`, `tin`, `pay` (pago mensual) y `anchor {date,debt}`. Su Excel se importa como el de las demás cuentas (sin saldo). `accBalance()` devuelve la deuda en negativo: `cardDebt()` = ancla − movimientos posteriores.
+- **Pagos emparejados:** el pago desde la corriente se empareja con su abono en la tarjeta (`pairTransfers`) y no cuenta como gasto; el gasto es cada compra. `recDetect` lo nombra «Pago de la tarjeta» (`card:true`) y la previsión lo cuenta como salida.
+- **Cuadre mensual (`openCuadreSheet`):** deuda del extracto + fecha de corte; la diferencia con los movimientos se guarda como movimiento `adj:'int'` (Finanzas › Intereses). Primer cuadre = solo ancla. Aviso si la diferencia ≫ intereses esperados.
+- **Bloque de deuda** en Finanzas › Cuentas: deuda, disponible, compras/pagos del mes, intereses, meses para liquidar (`cardPayoff` con TIN real).
+- **Avisos:** ≥80 % del límite, límite superado, sin ancla, cuadre con más de 35 días.
+- Demo con tarjeta ficticia; tests `f7_test.js` y `f7b.js`.
+
 ## 2026.11.21 · Fijos, previsión y avisos (fase 6 + 3b)
 
 - **Fijos (`S.fin.recur`):** cada fijo guarda nombre, importe con signo, frecuencia (semanal, mensual, trimestral, anual), día habitual (`off`; si los días caen a ambos lados del cambio de mes se guarda como desplazamiento desde el día 1, `bd`), margen de retraso (`win`, para ingresos), si el importe varía (`vr`), texto del banco (`key`), categoría y fecha de inicio (`start`/`since`). `recMatchTx()` empareja cada movimiento real por palabras del texto, signo y tolerancia de importe; la próxima fecha sale del último movimiento emparejado (`recNext()`/`recStep()`), anclada al ciclo más cercano, así una nómina adelantada no se confunde con la del mes siguiente. Un fijo sin texto del banco avanza por calendario.

@@ -251,8 +251,9 @@ function num(x){return String(Math.round(x*10)/10).replace('.',',');}
 /* ---------- Datos ---------- */
 var DEMO=false;try{DEMO=localStorage.getItem('mi-dia-mode')==='demo';}catch(e){}
 var KEY=DEMO?'mi-dia-demo':'mi-dia-v1';
-var APP_VERSION='2026.11.22';
+var APP_VERSION='2026.11.27';
 var CHANGES=[
+  {v:'2026.11.27',items:['Importar: nuevo botón «Deshacer esta importación» (quita lo añadido y deja todo como estaba; disponible hasta que hagas otro cambio). Además avisa solo cuando algo es raro: archivo sin novedades, hueco de más de 45 días, o cuenta que parece equivocada.','Importar el Excel del banco: ahora entiende también los encabezados en inglés (Date, Value date, Description, Amount, Balance…). Si no reconoce un archivo, te muestra los encabezados que ve para poder ajustarlo.']},
   {v:'2026.11.22',items:['Tarjeta de crédito: añádela como cuenta de tipo «Tarjeta» con su límite, TIN y pago mensual. Importa su Excel como el de tus cuentas. El pago desde tu cuenta corriente se empareja solo y no cuenta como gasto: el gasto es cada compra.','En Finanzas › Cuentas ves la deuda, el crédito disponible, lo comprado y pagado este mes, los intereses y cuánto tardarías en liquidarla con tu pago mensual.','Cuadrar con el extracto: indicas el «Total deuda pendiente» y la fecha de corte; la diferencia con tus movimientos se guarda como intereses y comisiones.','Quehaceres: nuevo «Silenciar hasta» al editar uno. No aparece en Hoy ni cuenta como atrasado hasta esa fecha; si lo marcas como hecho, el silencio se quita.','Apuntar un gasto: ahora puedes marcar si es compartido (50 %, otro porcentaje o su parte en euros) al momento. Al importar el extracto, el reparto pasa al movimiento del banco.','Avisos: tarjeta al 80 % del límite o pasada, pago de la tarjeta en los próximos 7 días y extracto sin cuadrar desde hace más de un mes.']},
   {v:'2026.11.21',items:['Fijos (Finanzas › Fijos): la app detecta los cargos que se repiten (suscripciones, alquiler, recibos, tu nómina, traspasos al ahorro) y los propones para confirmar con un toque. También puedes crearlos a mano. Cada fijo se empareja solo con su movimiento del banco y mueve su fecha; si el importe cambia o no llega, te avisa.','Previsión (Finanzas › Previsión): saldo estimado a 30 días con tus fijos y tu gasto variable medio, con un gráfico y la lista de próximos movimientos. La nómina puede llegar en días distintos: se guarda con un margen y la previsión usa el peor caso para avisar.','«Libre hasta la nómina»: cuánto te queda hasta cobrar, apartando tu mínimo de seguridad. Lo ves en Hoy dentro de la tarjeta Dinero.','Mínimo de seguridad: lo defines en euros o en % de tu gasto mensual medio; al escribir uno, la app calcula el otro.','Avisos en Hoy: saldo previsto bajo tu mínimo, presupuesto al 80 % o pasado, cargos de los próximos 7 días, fijos que no llegan y cambios de precio. Cada aviso se puede posponer («Luego») o silenciar.','Nómina con margen «hasta el último día hábil del mes» (sábados y domingos no cuentan) y fijos cada 2 meses, para recibos de agua, luz o gas que no llegan todos los meses.']},
   {v:'2026.11.19.2',items:['Resumen semanal: «Gastado» y «Donde más» usan el balance de cada categoría. Si recibes dinero en una categoría y lo devuelves (o al revés) en los 14 días siguientes o anteriores, se compensan y no aparecen como un gasto grande.','Meal prep con desayunos: cada receta puede ser almuerzo o desayuno. Cada comida compara con su propio precio de comer fuera (almuerzo 7 €, desayuno 5 €, configurables en Ajustes) y en Hoy marcas cada una por separado.']},
@@ -529,7 +530,7 @@ var news=null;
   if(!prev){if(hadStored)news=CHANGES.slice(0,1);else{S.seenV=APP_VERSION;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}return;}
   if(prev<APP_VERSION){var n=CHANGES.filter(function(c){return c.v>prev;});if(n.length)news=n;}})();
 if(S.__pair){delete S.__pair;try{pairTransfers();}catch(e){}}
-function save(){S.appv=APP_VERSION;try{localStorage.setItem(KEY,JSON.stringify(S));saveFailed=false;}catch(e){saveFailed=true;}}
+function save(){if(!ui.impBusy)ui.undoImp=null;S.appv=APP_VERSION;try{localStorage.setItem(KEY,JSON.stringify(S));saveFailed=false;}catch(e){saveFailed=true;}}
 
 var ui={tab:'hoy',view:'dia',date:todayStr(),ftab:'resumen',fmonth:'',fexp:{},fq:'',facc:'',impAcc:'',importResults:null,taskTab:'tareas',listId:null,sheet:null,sheetDel:false,confirm:'',bk:'',focus:'',qsort:'monto',fday:'',fhl:'',msg:'',fcat:null,hist:null,goal:'',goalMenu:false,shopTab:'listas',recipe:'',mealSub:'',fall:false,sel:null,review:false};
 
@@ -887,22 +888,36 @@ function accBalance(a){
 }
 
 /* Lectura e importación del archivo del banco */
+function hdrKey(x){
+  switch(x){
+    case 'f valor':case 'fecha valor':case 'value date':case 'valuedate':case 'value dt':case 'f. valor':return 'dv';
+    case 'fecha':case 'fecha operacion':case 'fecha contable':case 'date':case 'booking date':case 'posting date':case 'transaction date':case 'operation date':case 'accounting date':return 'df';
+    case 'concepto':case 'reason':case 'concept':case 'description':case 'details':case 'detail':case 'descripcion':return 'c';
+    case 'movimiento':case 'movement':case 'transaction':case 'transaction type':case 'type':return 'm';
+    case 'importe':case 'amount':case 'value':case 'sum':return 'amt';
+    case 'disponible':case 'saldo':case 'balance':case 'available':case 'available balance':return 'bal';
+    case 'observaciones':case 'remarks':case 'comments':case 'notes':case 'observations':return 'obs';
+  }
+  return '';
+}
 function findHeader(rows){
   for(var i=0;i<Math.min(rows.length,40);i++){
     var n=(rows[i]||[]).map(norm);
-    if(n.indexOf('importe')>=0&&n.some(function(x){return x==='fecha'||x==='f valor'||x==='fecha valor';}))return i;
+    var m=n.map(hdrKey);
+    if(m.indexOf('amt')>=0&&(m.indexOf('df')>=0||m.indexOf('dv')>=0))return i;
   }
   return -1;
 }
 function readSheet(buf){
   if(!window.XLSX)return {error:'No se pudo cargar el lector de Excel. Comprueba tu conexión y vuelve a intentarlo.'};
   try{
-    var wb=XLSX.read(buf,{type:'array'});
+    var wb=XLSX.read(buf,{type:'array'}),seen='';
     for(var i=0;i<wb.SheetNames.length;i++){
       var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[i]],{header:1,raw:true,defval:''});
       if(findHeader(rows)>=0)return {rows:rows};
+      if(!seen)for(var q=0;q<Math.min(rows.length,40)&&!seen;q++){var cells=(rows[q]||[]).filter(function(x){return typeof x==='string'&&x.trim();});if(cells.length>=3&&cells.length===(rows[q]||[]).filter(function(x){return x!==''&&x!=null;}).length&&!cells.some(function(x){return /\d/.test(x);}))seen=cells.slice(0,8).join(', ');}
     }
-    return {error:'No encuentro la fila de encabezados (Fecha, Concepto, Importe…). ¿Es el archivo de movimientos del banco?'};
+    return {error:'No encuentro la fila de encabezados (Fecha, Concepto, Importe…). ¿Es el archivo de movimientos del banco?'+(seen?' Encabezados que veo: '+seen+'.':'')};
   }catch(e){return {error:'No pude leer el archivo. Prueba con el .xlsx tal como lo descargas del banco.'};}
 }
 function phoneIn(v){
@@ -915,13 +930,14 @@ function importRows(rows,accId){
   if(hi<0)return {error:'No encuentro la fila de encabezados (Fecha, Concepto, Importe…).'};
   var col={};
   rows[hi].map(norm).forEach(function(h,i){
-    if(h==='f valor'||h==='fecha valor')col.dv=i;
-    else if(h==='fecha'||h==='fecha operacion'||h==='fecha contable')col.df=i;
-    else if(h==='concepto')col.c=i;
-    else if(h==='movimiento')col.m=i;
-    else if(h==='importe')col.amt=i;
-    else if((h==='disponible'||h==='saldo')&&col.bal==null)col.bal=i;
-    else if(h==='observaciones')col.obs=i;
+    var k=hdrKey(h);
+    if(k==='dv'&&col.dv==null)col.dv=i;
+    else if(k==='df'&&col.df==null)col.df=i;
+    else if(k==='c'&&col.c==null)col.c=i;
+    else if(k==='m'&&col.m==null)col.m=i;
+    else if(k==='amt'&&col.amt==null)col.amt=i;
+    else if(k==='bal'&&col.bal==null)col.bal=i;
+    else if(k==='obs'&&col.obs==null)col.obs=i;
   });
   if(col.amt==null||(col.dv==null&&col.df==null))return {error:'Faltan columnas de fecha o importe.'};
   var list=[];
@@ -957,6 +973,7 @@ function importRows(rows,accId){
     if(ex)used.add(ex);
     return ex;
   });
+  var prevN=0,prevMax='';F.txns.forEach(function(t){if(t.acc===accId){prevN++;if(t.df>prevMax)prevMax=t.df;}});
   var oldest=list[list.length-1],expected=oldest.b!=null?oldest.b-oldest.a:null,gap=false;
   if(expected!=null){
     var prior=F.txns.filter(function(t){return t.acc===accId&&t.df<=oldest.df&&!used.has(t);});
@@ -977,7 +994,13 @@ function importRows(rows,accId){
   fresh.forEach(function(t){F.txns.push(t);});
   classifyAll();save();
   var unc=fresh.filter(isUnc).length;
-  return {upd:upd,fresh:fresh,phones:list.filter(function(x){return x.p;}).length,obs:col.obs!=null,added:added,dups:dups,filled:filled,links:links,breaks:breaks,gap:gap,unc:unc,from:list.reduce(function(m,x){return x.dv<m?x.dv:m;},list[0].dv),to:list.reduce(function(m,x){return x.dv>m?x.dv:m;},list[0].dv),total:list.length};
+  var from0=list.reduce(function(m,x){return x.dv<m?x.dv:m;},list[0].dv),warn=[],acc0=accOf(accId),hasBal=list.some(function(x){return x.b!=null;});
+  if(added===0)warn.push('Este archivo no trajo nada nuevo: todos los movimientos ya estaban.');
+  if(prevN>=10&&added===list.length&&from0<=prevMax)warn.push('Ninguno de los movimientos coincide con los que ya tienes en esta cuenta, aunque las fechas se solapan. ¿Es la cuenta correcta?');
+  if(prevN>0&&prevMax&&diff(from0,prevMax)>45)warn.push('Hay un hueco de '+diff(from0,prevMax)+' días entre tu último movimiento ('+fmtShort(prevMax)+') y este archivo. Puede faltar un tramo.');
+  if(acc0&&prevN>=10&&acc0.type==='tarjeta'&&hasBal)warn.push('Este archivo trae saldo, pero la cuenta elegida es una tarjeta de crédito. ¿Es la cuenta correcta?');
+  if(acc0&&prevN>=10&&acc0.type!=='tarjeta'&&!hasBal&&F.txns.some(function(t){return t.acc===accId&&t.b!=null;}))warn.push('Este archivo no trae saldo y las demás importaciones de esta cuenta sí. ¿Es la cuenta correcta?');
+  return {warn:warn,upd:upd,fresh:fresh,phones:list.filter(function(x){return x.p;}).length,obs:col.obs!=null,added:added,dups:dups,filled:filled,links:links,breaks:breaks,gap:gap,unc:unc,from:list.reduce(function(m,x){return x.dv<m?x.dv:m;},list[0].dv),to:list.reduce(function(m,x){return x.dv>m?x.dv:m;},list[0].dv),total:list.length};
 }
 function importBuffer(buf,accId){
   var rd=readSheet(buf);if(rd.error)return rd;
@@ -1002,6 +1025,7 @@ function handleFiles(list){
   var accId=ensureAccount(),pending=files.length,loaded=[];
   function done(){
     if(--pending>0)return;
+    ui.impBusy=true;ui.undoImp=JSON.stringify(S.fin);
     loaded.forEach(function(x){if(x.rd.rows)x.min=minDate(x.rd.rows);});
     loaded.sort(function(a,b){return (a.min||'9999')<(b.min||'9999')?-1:(a.min||'9999')>(b.min||'9999')?1:0;});
     ui.importResults=loaded.map(function(x){var r=x.rd.error?{error:x.rd.error}:importRows(x.rd.rows,accId);r.file=x.name;return r;});
@@ -1009,7 +1033,7 @@ function handleFiles(list){
     if(nrc){ui.msg=(ui.msg?ui.msg+' ':'')+nrc+(nrc===1?' gasto apuntado se unió':' gastos apuntados se unieron')+' con su movimiento del banco.';}
     if(pendReview().length){ui.msg=(ui.msg?ui.msg+' ':'')+'Revisa los gastos apuntados en Movimientos › Apuntados.';}
     if(mo.some(function(x){return x.tot>0;})){ui.msg=(ui.msg?ui.msg+' ':'')+'Se repartió el ahorro de '+monthName(mo[mo.length-1].m)+' entre tus metas.';}
-    ui.fmonth='';render();
+    ui.fmonth='';render();ui.impBusy=false;
   }
   files.forEach(function(file,idx){
     var fr=new FileReader();
@@ -2049,11 +2073,13 @@ function viewFinCuentas(){
     if(r.error){out+='<div class="banner" style="background:var(--bad-soft)"><span><b>'+esc(r.file||'Archivo')+':</b> '+esc(r.error)+'</span></div>';return;}
     out+='<div class="resbox"><b>'+esc(r.file||'Archivo')+'</b><span>Se añadieron <b>'+r.added+'</b> movimientos de '+r.total+' ('+r.dups+' ya estaban). Periodo: '+fmtShort(r.from)+' a '+fmtShort(r.to)+'.</span>';
     out+='<span class="'+(r.breaks?'warnt':'okt')+'">Saldo: '+(r.links?(r.links-r.breaks)+' de '+r.links+' enlaces cuadran.':'el archivo no trae columna de saldo.')+(r.breaks?' Puede faltar algún movimiento.':'')+'</span>';
+    (r.warn||[]).forEach(function(w){out+='<span class="warnt">'+esc(w)+'</span>';});
     if(r.gap)out+='<span class="warnt">El saldo inicial no enlaza con lo que ya tenías: puede faltar un tramo anterior.</span>';
     if(r.upd)out+='<span>'+r.upd+(r.upd===1?' movimiento ya guardado cambió':' movimientos ya guardados cambiaron')+' de fecha contable o saldo (por ejemplo, un pendiente que se confirmó): se actualizaron.</span>';
     if(r.unc)out+='<span>'+r.unc+' sin clasificar. <button class="link2" data-act="ftab" data-t="cola">Clasificar ahora</button></span>';
     out+='</div>';
   });
+  if(ui.undoImp&&(ui.importResults||[]).some(function(r){return !r.error&&r.added>0;}))out+='<button class="btn block" style="margin-top:8px" data-act="imp-undo">Deshacer esta importación</button><p class="note">Quita lo que se añadió y deja todo como estaba antes. Solo está disponible hasta que hagas otro cambio.</p>';
   out+='</section><section class="sect"><h2>Cuentas</h2>';
   out+=F.accounts.length?'<ul class="rows">'+F.accounts.map(function(a){var b=accBalance(a),n=F.txns.filter(function(t){return t.acc===a.id;}).length;
     return '<li class="row"><button class="rowmain" data-act="acc-edit" data-id="'+a.id+'"><span class="t">'+esc(a.name)+'</span><span class="sub">'+accTypeName(a.type)+' · '+n+' movimientos'+(b?' · saldo '+money(b.b):'')+'</span></button></li>';}).join('')+'</ul>':'<p class="empty">Aún no hay cuentas.</p>';
@@ -3240,6 +3266,7 @@ function act(a,ds){
     case 'fall-clear':ui.fall=false;break;
     case 'tx-edit':if(String(ds.id).indexOf('p:')===0){var pq=(S.fin.pend||[]).filter(function(x){return 'p:'+x.id===ds.id;})[0];if(pq)openQuickSheet(pq);return;}var tx=find(S.fin.txns,ds.id);if(tx){openTxSheet(tx);}return;
     case 'contact-edit':openContactSheet(ds.ph);return;
+    case 'imp-undo':if(ui.undoImp){S.fin=JSON.parse(ui.undoImp);ui.undoImp=null;ui.importResults=null;save();ui.msg='Importación deshecha. Todo quedó como antes.';}break;
     case 'acc-new':openAccSheet(null);return;
     case 'acc-edit':openAccSheet(find(S.fin.accounts,ds.id));return;
     case 'cat-new':openCatSheet(null);return;

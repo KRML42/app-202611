@@ -2,6 +2,11 @@
 
 Cada versión publicada cambia `APP_VERSION` en `index.html` y `V` en `sw.js` (mismo valor), y añade sus novedades a `CHANGES` en `index.html`.
 
+## 2026.11.27 · Importación con encabezados en inglés
+
+- Importación: botón «Deshacer esta importación» (instantánea de `S.fin` en memoria, se descarta en el siguiente `save()`) y avisos (`warn[]`: sin novedades, hueco >45 días, solapa sin coincidir, saldo en tarjeta / sin saldo).
+- `hdrKey()` unifica los sinónimos de columnas (es/en); `findHeader` e `importRows` lo usan. El error de «no reconozco el archivo» muestra los encabezados vistos.
+
 ## 2026.11.22 · Tarjeta de crédito (fase 7)
 
 - **Cuenta tipo `tarjeta`:** `limit`, `tin`, `pay` (pago mensual) y `anchor {date,debt}`. Su Excel se importa como el de las demás cuentas (sin saldo). `accBalance()` devuelve la deuda en negativo: `cardDebt()` = ancla − movimientos posteriores.
